@@ -7,11 +7,9 @@ from src.models import ORJSONModel
 from fastapi import HTTPException
 import datetime
 
+from typing import List, Optional
 
-class SendMessageRequest(ORJSONModel):
-    sender_id: int
-    reciever_id: int
-    message: str
+
 
 class CreateGroupRequest(ORJSONModel):
     name: str = Field(..., min_length=3, max_length=255, description="The name of the group")
@@ -41,3 +39,20 @@ class JoinGroupRequest(ORJSONModel):
     uuid: str
     username: str
     group_id: int
+
+
+class UploadedFileInfo(ORJSONModel):
+    url: str
+    type: str
+    filename: str
+
+class FileInfo(ORJSONModel):
+    url: str
+    type: str
+    filename: str
+
+class SendMessageRequest(ORJSONModel):
+    sender_uuid: str
+    receiver_id: int
+    message: Optional[str] = None
+    files: Optional[List[FileInfo]] = None

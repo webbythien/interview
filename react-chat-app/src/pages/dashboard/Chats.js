@@ -24,7 +24,7 @@ import axios from "axios";
 import useSettings from "../../hooks/useSettings";
 
 const Chats = () => {
-  const { setGroupChat,setChatHistory } = useSettings();
+  const { setGroupChat,setChatHistory,setLoadingHistory } = useSettings();
 
   const theme = useTheme();
   const BASE_URL = "http://localhost:8000/v1/api/chat";
@@ -37,6 +37,7 @@ const Chats = () => {
   const [chatList, setChatList] = useState([])
   const getGroups = async () => {
     try {
+      setLoadingHistory(true)
       const response = await axios.get(`${BASE_URL}${ENDPOINT}`, { params });
       console.log("Groups data:", response.data);
       if (response?.data && response.data?.groups?.length >0 ){

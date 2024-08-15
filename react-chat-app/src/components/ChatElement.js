@@ -5,8 +5,9 @@ import useSettings from '../hooks/useSettings';
 
 //single chat element
 const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders}) => {
-    const { groupChat, setGroupChat } = useSettings();
+      const { groupChat, setGroupChat,setLoadingHistory } = useSettings();
     const handleSetGroupChat = () =>{
+      setLoadingHistory(true)
       setGroupChat({id,name, img, msg, time,online, unread,member_count,recent_senders })
     }
     const theme = useTheme();

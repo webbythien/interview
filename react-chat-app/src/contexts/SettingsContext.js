@@ -167,6 +167,7 @@ const SettingsProvider = ({ children }) => {
 
 
   const [groupChat, setGroupChat] = useState(0)
+  const [loadingHistory, setLoadingHistory] = useState(true)
   const connectSocket = () => {
     const userId = localStorage.getItem("uuid")
     // Connect to the Socket.io server
@@ -179,7 +180,8 @@ const SettingsProvider = ({ children }) => {
       socket.emit("subscribe", { merchant_id: `${userId}` });
       console.log("emit subscribe with user id ", userId);
 
-      socket.off("notification");
+      // socket.off("notification");
+      socket.off("message");
       // Get notification
       socket.on("message", (data) => {
         console.log('message: ',data);
@@ -218,11 +220,13 @@ const SettingsProvider = ({ children }) => {
           offset,
           start_id: startId
         }
-      });
+      }); 
       setChatHistory(response.data.messages)
       console.log("response.data: ", response)
+      setLoadingHistory(false)
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setLoadingHistory(false)
       // throw error; // Optionally rethrow the error to be handled by the calling code
     }
   };
@@ -268,7 +272,9 @@ const SettingsProvider = ({ children }) => {
         groupChat,
         setGroupChat,
         chatHistory,
-        setChatHistory
+        setChatHistory,
+        loadingHistory,
+        setLoadingHistory
       }}
     >
       {children}

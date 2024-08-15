@@ -45,9 +45,38 @@ router = APIRouter()
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from src.database import get_db
-from .schemas import CreateGroupRequest,JoinGroupRequest
+from .schemas import CreateGroupRequest,JoinGroupRequest, UploadedFileInfo
 from .models import Group, GroupConversation, Conversation,ConversationImage,Docs
 from sqlalchemy import func, desc, and_
+from uuid import uuid4
+
+
+@router.post("/upload-files", response_model=List[UploadedFileInfo])
+async def upload_files(files: List[UploadFile] = File(...)):
+    uploaded_files = []
+
+    for file in files:
+        content_type = file.content_type
+        
+        if content_type.startswith('image/'):
+            file_type = 'img'
+            file_url = S3AWSHelpers.upload_image(file, "PRM")
+        elif content_type in ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
+            file_type = 'doc'
+            file_url = S3AWSHelpers.upload_doc(file, "PRM")
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+
+        if not file_url:
+            raise HTTPException(status_code=500, detail=f"Failed to upload file: {file.filename}")
+
+        uploaded_files.append(UploadedFileInfo(
+            url=file_url,
+            type=file_type,
+            filename=file.filename
+        ))
+
+    return uploaded_files
 
 @router.post("/test/mail")
 async def send_mail():
@@ -259,85 +288,32 @@ async def join_group(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to join group")
 
 
-@router.post("/conversations", status_code=status.HTTP_201_CREATED)
-async def create_conversation(
-    sender_uuid: str = Form(...),
-    reciever_id: int = Form(...),
-    message: str = Form(None),
-    files: List[UploadFile] = File(None),
-    db: Session = Depends(get_db)
-):
+@router.post("/conversations")
+async def create_conversation(request: SendMessageRequest):
     try:
-        # Initialize subtype and file_urls
-        subtype = None
-        file_urls = []
-
-        # Create a new conversation
-        new_conversation = Conversation(
-            sender_uuid=sender_uuid,
-            reciever_id=reciever_id,
-            message=message,
-            type="msg",
-            created_at=datetime.utcnow(),  # Ensure consistent timezone usage
-            updated_at=datetime.utcnow()
+        task_id = str(uuid.uuid4())
+        
+        # Chuyển đổi các đối tượng FileInfo thành dict
+        files_dict = [file.dict() for file in request.files] if request.files else None
+        
+        task_manage.send_task(
+            "send_message_task",
+            kwargs={
+                "receiver_id": request.receiver_id,
+                "sender_uuid": request.sender_uuid, 
+                "message": request.message,
+                "files": files_dict,
+                "task_id": task_id
+            }
         )
-        db.add(new_conversation)
-        db.flush()  # Flush to get new_conversation.id
-
-        # Process each file to determine subtype and create related records
-        for file in files:
-            content_type = file.content_type
-            file_url = None
-
-            if content_type.startswith('image/'):
-                subtype = 'img'
-                file_url = S3AWSHelpers.upload_image(file, "PRM")
-                if file_url:
-                    new_image = ConversationImage(
-                        conversation_id=new_conversation.id,
-                        img=file_url,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow()
-                    )
-                    db.add(new_image)
-            elif content_type in ['application/pdf', 'application/msword']:
-                subtype = 'doc'
-                file_url = S3AWSHelpers.upload_doc(file, "PRM")
-                if file_url:
-                    new_doc = Docs(
-                        conversation_id=new_conversation.id,
-                        name=file.filename,
-                        link=file_url,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow()
-                    )
-                    db.add(new_doc)
-            else:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported file type")
-
-            if file_url:
-                file_urls.append(file_url)
-
-        # Update the conversation with the correct subtype
-        new_conversation.subtype = subtype
-        db.add(new_conversation)
-        db.commit()  # Commit after all records are added
 
         return {
-            "id": new_conversation.id,
-            "sender_uuid": new_conversation.sender_uuid,
-            "reciever_id": new_conversation.reciever_id,
-            "message": new_conversation.message,
-            "type": new_conversation.type,
-            "subtype": new_conversation.subtype,
-            "file_urls": file_urls  # Return list of file URLs
+            "msg": "Send message task initiated successfully",
+            "task_id": task_id
         }
-    
     except Exception as e:
-        print(f"Error creating conversation: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create conversation")
-
-
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @router.get("/groups/{group_id}/messages")
 async def get_group_messages(
     group_id: int,

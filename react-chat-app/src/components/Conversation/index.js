@@ -1,25 +1,39 @@
-import {  Box, Stack} from '@mui/material';
-import React from 'react';
+import { Box, Stack } from "@mui/material";
+import React, { useEffect, useRef } from "react";
 import { useTheme } from "@mui/material/styles";
-import Header from './Header';
-import Footer from './Footer';
-import Message from './Message';
+import Header from "./Header";
+import Footer from "./Footer";
+import Message from "./Message";
+import useSettings from "../../hooks/useSettings";
 
 const Conversation = () => {
-    const theme = useTheme();
-  return (
-    <Stack height={'100%'} maxHeight={'100vh'} width={'auto'}>
+  const theme = useTheme();
+  const boxRef = useRef(null);
+  const { chatHistory, loadingHistory} = useSettings();
 
-        {/* Chat header */}
-        <Header/>
-        {/* Msg */}
-        <Box className='scrollbar' width={"100%"} sx={{flexGrow:1, height:'100%', overflowY:'scroll'}}>
-        <Message menu={true}/>
-        </Box>
-        {/* Chat footer */}
-       <Footer/>
+  useEffect(() => {
+    if (boxRef.current) {
+      boxRef.current.scrollTop = boxRef.current.scrollHeight;
+    }
+  }, [chatHistory,loadingHistory]);
+
+  return (  
+    <Stack height={"100%"} maxHeight={"100vh"} width={"auto"}>
+      {/* Chat header */}
+      <Header />
+      {/* Msg */}
+      <Box
+        ref={boxRef}
+        className="scrollbar"
+        width={"100%"}
+        sx={{ flexGrow: 1, height: "100%", overflowY: "scroll" }}
+      >
+        <Message menu={true} />
+      </Box>
+      {/* Chat footer */}
+      <Footer />
     </Stack>
-  )
-}
+  );
+};
 
-export default Conversation
+export default Conversation;

@@ -14,6 +14,23 @@ import asyncio
 from jinja2 import Environment, FileSystemLoader
 from decimal import Decimal
 import os
+from typing import List, Optional
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Response,
+    UploadFile,
+    status,
+    Query,
+    Path,
+    Request,
+    Form
+)
+from src.chat.models import Group, GroupConversation, Conversation,ConversationImage,Docs
+from src.s3 import S3AWSHelpers
 
 mail_conf = {
     "MAIL_USERNAME": "thiengk563@gmail.com",
@@ -82,20 +99,66 @@ async def send_order_task(email: str, name: str, products: list, shipping_fee: f
     
 @worker.task_manage.task(name="send_message_task")
 @worker.sync_task
-async def send_message_task(reciever_id: int , sender_id: int, message: str):
+async def send_message_task(
+    receiver_id: int, 
+    sender_uuid: str, 
+    message: str = None, 
+    files: List[dict] = None,
+    task_id: str = None
+):
     try:
         db = session()
-        message = Message(
-            sender_id= sender_id,
-            reciever_id = reciever_id,
-            message = message
-        )
-        db.add(message)
-        db.flush()
-        db.refresh(message)
+        subtype = None
+        file_urls = []
 
-        socket_io.To(str(reciever_id)).Emit("message", jsonable_encoder(message))
+        new_conversation = Conversation(
+            sender_uuid=sender_uuid,
+            reciever_id=receiver_id,
+            message=message,
+            type="msg",
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        db.add(new_conversation)
+        db.flush()
+
+        if files:
+            for file in files:
+                file_url = file['url']
+                file_type = file['type']
+                filename = file['filename']
+
+                if file_type == 'img':
+                    subtype = 'img'
+                    new_image = ConversationImage(
+                        conversation_id=new_conversation.id,
+                        img=file_url,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
+                    db.add(new_image)
+                elif file_type == 'doc':
+                    subtype = 'doc'
+                    new_doc = Docs(
+                        conversation_id=new_conversation.id,
+                        name=filename,
+                        link=file_url,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
+                    db.add(new_doc)
+
+                file_urls.append(file_url)
+
+        new_conversation.subtype = subtype
+        db.add(new_conversation)
+
+        socket_io.To(str(receiver_id)).Emit("message", jsonable_encoder(new_conversation))
+
         db.commit()
+
+        return {"status": "success", "task_id": task_id}
+
     except Exception as e:
         db.rollback()
         traceback.print_exc()
