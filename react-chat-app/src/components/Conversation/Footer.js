@@ -256,6 +256,8 @@ const Footer = () => {
       const temp = {
         type: "msg",
         message: message,
+        sent:1,
+        id:responseData.task_id,
         uuid: localStorage.getItem("uuid"), 
         created_at: new Date().toISOString(),
         subtype: fileList.length > 0 ? "img" : null, 

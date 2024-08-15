@@ -28,10 +28,11 @@ const Chats = () => {
 
   const theme = useTheme();
   const BASE_URL = "http://localhost:8000/v1/api/chat";
-  const ENDPOINT = "/groups";
+  const ENDPOINT = "/groups/joined";
   const params = {
     limit: 10,
     offset: 0,
+    user_uuid:localStorage.getItem("uuid")
   };
 
   const [chatList, setChatList] = useState([])
@@ -120,9 +121,10 @@ const Chats = () => {
               All Chats
             </Typography>
             {chatList.length > 0 && chatList.map((el) => {
-              return <ChatElement {...el} />;
+              return <ChatElement key={el.id+""} {...el} />;
             })}
           </Stack>
+          
         </Stack>
       </Stack>
     </Box>

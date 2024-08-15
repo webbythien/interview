@@ -4,11 +4,11 @@ import StyledBadge from './StyledBadge';
 import useSettings from '../hooks/useSettings';
 
 //single chat element
-const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders}) => {
+const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders, sent}) => {
       const { groupChat, setGroupChat,setLoadingHistory } = useSettings();
     const handleSetGroupChat = () =>{
       setLoadingHistory(true)
-      setGroupChat({id,name, img, msg, time,online, unread,member_count,recent_senders })
+      setGroupChat({id,name, img, msg, time,online, unread,member_count,recent_senders,sent })
     }
     const theme = useTheme();
     const truncateMessage = (msg, charLimit) => {

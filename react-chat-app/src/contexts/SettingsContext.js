@@ -167,6 +167,8 @@ const SettingsProvider = ({ children }) => {
 
 
   const [groupChat, setGroupChat] = useState(0)
+  const [chatHistory, setChatHistory] = useState([])
+
   const [loadingHistory, setLoadingHistory] = useState(true)
   const connectSocket = () => {
     const userId = localStorage.getItem("uuid")
@@ -177,16 +179,26 @@ const SettingsProvider = ({ children }) => {
       console.log("Connected to the Socket.io server", socket.id);
 
       // Subscribe to a merchant - change merchant_id
-      socket.emit("subscribe", { merchant_id: `${userId}` });
+      socket.emit("subscribe", { room_id: `${userId}` });
       console.log("emit subscribe with user id ", userId);
 
       // socket.off("notification");
       socket.off("message");
       // Get notification
       socket.on("message", (data) => {
-        console.log('message: ',data);
+        const { task_id, ...restData } = data;
 
-        
+        setChatHistory((prevChatHistory) => {
+          const index = prevChatHistory.findIndex(item => item.id === data.task_id);
+      
+          if (index > -1) {
+            const updatedChatHistory = [...prevChatHistory];
+            updatedChatHistory[index] = restData;
+            return updatedChatHistory;
+          } else {
+            return [...prevChatHistory, data];
+          }
+        });
       });
      
     });
@@ -211,7 +223,6 @@ const SettingsProvider = ({ children }) => {
     connectSocket()
   },[])
 
-  const [chatHistory, setChatHistory] = useState([])
   const fetchMessages = async (groupId, limit, offset, startId = null) => {
     try {
       const response = await axios.get(`http://localhost:8000/v1/api/chat/groups/${groupId}/messages`, {

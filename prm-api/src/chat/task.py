@@ -110,7 +110,10 @@ async def send_message_task(
         db = session()
         subtype = None
         file_urls = []
+        img_urls = []
+        doc_data = {}
 
+        # Create a new conversation record
         new_conversation = Conversation(
             sender_uuid=sender_uuid,
             reciever_id=receiver_id,
@@ -120,8 +123,9 @@ async def send_message_task(
             updated_at=datetime.utcnow()
         )
         db.add(new_conversation)
-        db.flush()
+        db.flush()  # Ensure the ID is assigned
 
+        # Process files if any
         if files:
             for file in files:
                 file_url = file['url']
@@ -130,33 +134,49 @@ async def send_message_task(
 
                 if file_type == 'img':
                     subtype = 'img'
-                    new_image = ConversationImage(
-                        conversation_id=new_conversation.id,
-                        img=file_url,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow()
-                    )
-                    db.add(new_image)
+                    img_urls.append(file_url)
                 elif file_type == 'doc':
                     subtype = 'doc'
-                    new_doc = Docs(
-                        conversation_id=new_conversation.id,
-                        name=filename,
-                        link=file_url,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow()
-                    )
-                    db.add(new_doc)
+                    doc_data = {
+                        "name": filename,
+                        "link": file_url
+                    }
 
                 file_urls.append(file_url)
 
+        # Update the subtype of the conversation
         new_conversation.subtype = subtype
         db.add(new_conversation)
-
-        socket_io.To(str(receiver_id)).Emit("message", jsonable_encoder(new_conversation))
-
         db.commit()
 
+        # Construct the message data to emit
+        new_message_data = {
+            "type": "msg",
+            "message": message,
+            "uuid": sender_uuid,
+            "id": new_conversation.id,
+            "created_at": new_conversation.created_at.isoformat(),
+            "subtype": subtype,
+            "task_id": task_id,
+            "sent": 2
+        }
+        
+        # Add subtype-specific fields
+        if subtype == 'img':
+            new_message_data['img'] = img_urls
+        elif subtype == 'doc':
+            new_message_data['doc'] = doc_data
+
+        user_uuids_tuples = db.query(GroupConversation.user_uuid).filter(GroupConversation.group_id == receiver_id).all()
+        user_uuids = [uuid for (uuid,) in user_uuids_tuples]
+
+        # Print user UUIDs for debugging
+        print("user_uuids : ", user_uuids)
+
+        # Emit the new message to each user individually
+        for user_uuid in user_uuids:
+            socket_io.To(str(user_uuid)).Emit("message", new_message_data)
+            
         return {"status": "success", "task_id": task_id}
 
     except Exception as e:

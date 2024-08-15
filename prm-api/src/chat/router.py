@@ -30,6 +30,7 @@ from src.worker import task_manage
 import traceback
 from src.s3 import S3AWSHelpers
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 
 logging.getLogger().setLevel(logging.INFO)
 from math import ceil
@@ -162,28 +163,30 @@ async def create_group(group_data: CreateGroupRequest, db: Session = Depends(get
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create group")
 
 
-@router.get("/groups", status_code=status.HTTP_200_OK)
-async def get_all_groups(
-    limit: int = Query(10, description="Limit the number of results returned"), 
+@router.get("/groups/joined", status_code=status.HTTP_200_OK)
+async def get_joined_groups(
+    user_uuid: str,
+    limit: int = Query(10, description="Limit the number of results returned"),
     offset: int = Query(0, description="Number of results to skip"),
     db: Session = Depends(get_db)
 ):
     try:
-        # Query to get group details along with user counts
-        groups_query = db.query(
+        # Query to get groups that the user has joined along with member counts
+        joined_groups_query = db.query(
             Group,
             func.count(GroupConversation.id).label("member_count")
         ).outerjoin(GroupConversation, Group.id == GroupConversation.group_id)\
+         .filter(GroupConversation.user_uuid == user_uuid)\
          .group_by(Group.id)\
          .order_by(desc(Group.id))  # Sort by group ID in descending order
         
-        total_groups = groups_query.count()
+        total_groups = joined_groups_query.count()
 
         # Apply pagination
-        groups = groups_query.offset(offset).limit(limit).all()
+        joined_groups = joined_groups_query.offset(offset).limit(limit).all()
 
         result = []
-        for group, member_count in groups:
+        for group, member_count in joined_groups:
             group_id = group.id
 
             # Get the 3 most recent senders by username
@@ -228,19 +231,105 @@ async def get_all_groups(
 
         return JSONResponse(
             content={
-                "groups": result, 
+                "groups": result,
                 "total": total_groups,
                 "limit": limit,
                 "offset": offset
-            }, 
+            },
             status_code=status.HTTP_200_OK
         )
 
     except Exception as e:
         traceback.print_exc()
-        logging.error(f"Error fetching groups: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch groups")
-    
+        logging.error(f"Error fetching joined groups: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch joined groups")
+
+@router.get("/groups/not-joined", status_code=status.HTTP_200_OK)
+async def get_not_joined_groups(
+    user_uuid: str,
+    limit: int = Query(10, description="Limit the number of results returned"),
+    offset: int = Query(0, description="Number of results to skip"),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Subquery to get group IDs that the user has joined
+        joined_group_ids = db.query(GroupConversation.group_id).filter(GroupConversation.user_uuid == user_uuid).subquery()
+
+        # Query to get groups that the user has not joined along with member counts
+        not_joined_groups_query = db.query(
+            Group,
+            func.count(GroupConversation.id).label("member_count")
+        ).outerjoin(GroupConversation, Group.id == GroupConversation.group_id)\
+         .filter(~Group.id.in_(joined_group_ids))\
+         .group_by(Group.id)\
+         .order_by(desc(Group.id))  # Sort by group ID in descending order
+        
+        total_groups = not_joined_groups_query.count()
+
+        # Apply pagination
+        not_joined_groups = not_joined_groups_query.offset(offset).limit(limit).all()
+
+        result = []
+        for group, member_count in not_joined_groups:
+            group_id = group.id
+
+            # Get the 3 most recent senders by username
+            recent_senders_query = db.query(
+                GroupConversation.username
+            ).filter(
+                GroupConversation.group_id == group_id
+            ).order_by(desc(GroupConversation.created_at)).limit(3)
+            recent_senders = [sender.username for sender in recent_senders_query]
+
+            # Get the most recent message
+            recent_message_query = db.query(
+                func.max(Conversation.created_at).label("last_message_time")
+            ).filter(
+                Conversation.reciever_id == group_id
+            ).scalar()
+
+            if recent_message_query:
+                most_recent_message = db.query(Conversation)\
+                    .filter(
+                        and_(
+                            Conversation.reciever_id == group_id,
+                            Conversation.created_at == recent_message_query
+                        )
+                    ).first()
+                recent_message = most_recent_message.message if most_recent_message else None
+                time_to_display = recent_message_query.strftime("%a %H:%M")  # Format datetime
+            else:
+                recent_message = None
+                time_to_display = group.created_at.strftime("%a %H:%M")  # Format datetime from group
+
+            result.append({
+                "id": group.id,
+                "name": group.name,
+                "time": time_to_display,
+                "member_count": member_count,
+                "recent_senders": recent_senders,
+                "msg": recent_message if recent_message is not None else "Welcome to new group",
+                "online": True,
+                "unread": False,
+            })
+
+        return JSONResponse(
+            content={
+                "groups": result,
+                "total": total_groups,
+                "limit": limit,
+                "offset": offset
+            },
+            status_code=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        logging.error(f"Error fetching not joined groups: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch not joined groups")
+
+
+
 @router.post("/join-group", status_code=status.HTTP_200_OK)
 async def join_group(
     request: JoinGroupRequest, 
@@ -314,6 +403,32 @@ async def create_conversation(request: SendMessageRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
+@router.get("/groups/{group_id}/check_user")
+async def check_user_in_group(
+    group_id: int,
+    user_uuid: str,
+    db: Session = Depends(get_db)
+):
+    try:
+        # Check if the user_uuid is part of the specified group_id
+        user_in_group = db.query(GroupConversation).filter(
+            GroupConversation.group_id == group_id,
+            GroupConversation.user_uuid == user_uuid
+        ).first()
+        
+        if user_in_group:
+            return {"is_member": True}
+        else:
+            return {"is_member": False}
+
+    except SQLAlchemyError as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Database error")
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Failed to check user membership")
+    
 @router.get("/groups/{group_id}/messages")
 async def get_group_messages(
     group_id: int,
@@ -327,16 +442,19 @@ async def get_group_messages(
         messages_query = db.query(Conversation).filter(Conversation.reciever_id == group_id)
 
         if start_id:
-            # Fetch messages after the start_id
+            # Fetch messages older than the start_id
             messages_query = messages_query.filter(Conversation.id < start_id)
         
-        # Fetch messages with pagination and ordering
-        messages = messages_query.order_by(Conversation.created_at.asc()).offset(offset).limit(limit + 1).all()
+        # Fetch messages with pagination and ordering (newest first)
+        messages = messages_query.order_by(Conversation.created_at.desc()).offset(offset).limit(limit + 1).all()
 
         # Determine if there are more messages
         has_more = len(messages) > limit
         if has_more:
             messages = messages[:-1]  # Remove the extra message used for checking
+
+        # Reverse the order to have the newest message at the end
+        messages.reverse()
 
         result = [format_message(msg, db) for msg in messages]
 
@@ -359,7 +477,9 @@ def format_message(message, db):
     """Format a single message record."""
     message_data = {
         "type": "msg",
+        "id": message.id,
         "message": message.message,
+        "sent": 2,
         "uuid": message.sender_uuid,
         "created_at": message.created_at.isoformat()  # Format datetime to string
     }
@@ -379,6 +499,7 @@ def format_message(message, db):
             }
 
     return message_data
+
 # @router.post("")
 # async def send_message(
 #     send_msg_data: SendMessageRequest, db: Session = Depends(get_db)
