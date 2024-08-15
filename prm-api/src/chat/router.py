@@ -46,7 +46,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from src.database import get_db
 from .schemas import CreateGroupRequest,JoinGroupRequest
-from .models import Group, GroupConversation, Conversation
+from .models import Group, GroupConversation, Conversation,ConversationImage,Docs
 from sqlalchemy import func, desc, and_
 
 @router.post("/test/mail")
@@ -264,24 +264,13 @@ async def create_conversation(
     sender_uuid: str = Form(...),
     reciever_id: int = Form(...),
     message: str = Form(None),
-    file: UploadFile = File(None),
+    files: List[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
     try:
-        # Determine subtype
+        # Initialize subtype and file_urls
         subtype = None
-        file_url = None
-        
-        if file:
-            content_type = file.content_type
-            if content_type.startswith('image/'):
-                subtype = 'img'
-                file_url = S3AWSHelpers.upload_image(file, "PRM")
-            elif content_type in ['application/pdf', 'application/msword']:
-                subtype = 'doc'
-                file_url = S3AWSHelpers.upload_doc(file, "PRM")
-            else:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported file type")
+        file_urls = []
 
         # Create a new conversation
         new_conversation = Conversation(
@@ -289,13 +278,50 @@ async def create_conversation(
             reciever_id=reciever_id,
             message=message,
             type="msg",
-            subtype=subtype,
             created_at=datetime.utcnow(),  # Ensure consistent timezone usage
             updated_at=datetime.utcnow()
         )
         db.add(new_conversation)
-        db.commit()
-        db.refresh(new_conversation)
+        db.flush()  # Flush to get new_conversation.id
+
+        # Process each file to determine subtype and create related records
+        for file in files:
+            content_type = file.content_type
+            file_url = None
+
+            if content_type.startswith('image/'):
+                subtype = 'img'
+                file_url = S3AWSHelpers.upload_image(file, "PRM")
+                if file_url:
+                    new_image = ConversationImage(
+                        conversation_id=new_conversation.id,
+                        img=file_url,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
+                    db.add(new_image)
+            elif content_type in ['application/pdf', 'application/msword']:
+                subtype = 'doc'
+                file_url = S3AWSHelpers.upload_doc(file, "PRM")
+                if file_url:
+                    new_doc = Docs(
+                        conversation_id=new_conversation.id,
+                        name=file.filename,
+                        link=file_url,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
+                    db.add(new_doc)
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported file type")
+
+            if file_url:
+                file_urls.append(file_url)
+
+        # Update the conversation with the correct subtype
+        new_conversation.subtype = subtype
+        db.add(new_conversation)
+        db.commit()  # Commit after all records are added
 
         return {
             "id": new_conversation.id,
@@ -304,13 +330,79 @@ async def create_conversation(
             "message": new_conversation.message,
             "type": new_conversation.type,
             "subtype": new_conversation.subtype,
-            "file_url": file_url
+            "file_urls": file_urls  # Return list of file URLs
         }
     
     except Exception as e:
         print(f"Error creating conversation: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create conversation")
+
+
+@router.get("/groups/{group_id}/messages")
+async def get_group_messages(
+    group_id: int,
+    limit: int = Query(20, description="Number of messages to return"),
+    offset: int = Query(0, description="Number of messages to skip"),
+    start_id: Optional[int] = Query(None, description="ID to start fetching messages from"),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Base query to get messages for the specified group_id
+        messages_query = db.query(Conversation).filter(Conversation.reciever_id == group_id)
+
+        if start_id:
+            # Fetch messages after the start_id
+            messages_query = messages_query.filter(Conversation.id < start_id)
+        
+        # Fetch messages with pagination and ordering
+        messages = messages_query.order_by(Conversation.created_at.asc()).offset(offset).limit(limit + 1).all()
+
+        # Determine if there are more messages
+        has_more = len(messages) > limit
+        if has_more:
+            messages = messages[:-1]  # Remove the extra message used for checking
+
+        result = [format_message(msg, db) for msg in messages]
+
+        # Get total message count
+        total_messages = db.query(func.count(Conversation.id)).filter(Conversation.reciever_id == group_id).scalar()
+
+        return {
+            "messages": result,
+            "total": total_messages,
+            "limit": limit,
+            "offset": offset,
+            "has_more": has_more
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Failed to fetch messages")
+
+def format_message(message, db):
+    """Format a single message record."""
+    message_data = {
+        "type": "msg",
+        "message": message.message,
+        "uuid": message.sender_uuid,
+        "created_at": message.created_at.isoformat()  # Format datetime to string
+    }
     
+    if message.subtype:
+        message_data["subtype"] = message.subtype
+
+    if message.subtype == "img":
+        images = db.query(ConversationImage).filter(ConversationImage.conversation_id == message.id).all()
+        message_data["img"] = [image.img for image in images]
+    elif message.subtype == "doc":
+        docs = db.query(Docs).filter(Docs.conversation_id == message.id).all()
+        if docs:
+            message_data["doc"] = {
+                "name": docs[0].name,
+                "link": docs[0].link
+            }
+
+    return message_data
 # @router.post("")
 # async def send_message(
 #     send_msg_data: SendMessageRequest, db: Session = Depends(get_db)

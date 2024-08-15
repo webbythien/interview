@@ -2,12 +2,15 @@ import { Box, Stack } from '@mui/material'
 import React from 'react';
 import {Chat_History} from '../../data'
 import { DocMsg, LinkMsg, MediaMsg, ReplyMsg, TextMsg, TimeLine } from './MsgTypes';
+import useSettings from '../../hooks/useSettings';
 
 const Message = ({menu}) => {
+  const { chatHistory, } = useSettings();
+
   return (
     <Box p={3}>
         <Stack spacing={3}>
-            {Chat_History.map((el)=>{
+            {chatHistory?.length >0 &&  chatHistory.map((el)=>{
                 switch (el.type) {
                     case 'divider':
                       return <TimeLine el={el}/>

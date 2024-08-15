@@ -7,7 +7,7 @@ import getColorPresets, {
   colorPresets,
 } from "../utils/getColorPresets";
 import io from "socket.io-client";
-
+import axios from "axios";
 
 const initialState = {
   ...defaultSettings,
@@ -184,13 +184,7 @@ const SettingsProvider = ({ children }) => {
       socket.on("message", (data) => {
         console.log('message: ',data);
 
-        // //@ts-ignore
-        // setNotifications((prev) => {
-        //   //@ts-ignore
-        //   return [data, ...prev];
-        // });
-
-        // setCountNoti((prev) => ++prev);
+        
       });
      
     });
@@ -214,6 +208,27 @@ const SettingsProvider = ({ children }) => {
   useEffect(()=>{
     connectSocket()
   },[])
+
+  const [chatHistory, setChatHistory] = useState([])
+  const fetchMessages = async (groupId, limit, offset, startId = null) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/v1/api/chat/groups/${groupId}/messages`, {
+        params: {
+          limit,
+          offset,
+          start_id: startId
+        }
+      });
+      setChatHistory(response.data.messages)
+      console.log("response.data: ", response)
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      // throw error; // Optionally rethrow the error to be handled by the calling code
+    }
+  };
+  useEffect(()=>{
+    fetchMessages(groupChat?.id)
+  },[groupChat])
 
   
   return (
@@ -251,7 +266,9 @@ const SettingsProvider = ({ children }) => {
         onResetSetting,
 
         groupChat,
-        setGroupChat
+        setGroupChat,
+        chatHistory,
+        setChatHistory
       }}
     >
       {children}
