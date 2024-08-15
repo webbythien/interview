@@ -1,17 +1,35 @@
 import { Avatar, Badge, Box, Stack, Typography } from '@mui/material';
 import {useTheme , styled} from '@mui/material/styles';
 import StyledBadge from './StyledBadge';
+import useSettings from '../hooks/useSettings';
 
 //single chat element
 const ChatElement = ({id,name, img, msg, time,online, unread}) => {
+    const { groupChat, setGroupChat } = useSettings();
+    const handleSetGroupChat = () =>{
+      setGroupChat({id,name, img, msg, time,online, unread})
+    }
     const theme = useTheme();
+    const truncateMessage = (msg, charLimit) => {
+      if (msg.length > charLimit) {
+        return msg.slice(0, charLimit) + '...';
+      }
+      return msg;
+    };
     return (
-      <Box sx={{
+      <Box
+      onClick={handleSetGroupChat}
+      sx={{
         width: "100%",
         borderRadius: 1,
-        backgroundColor: theme.palette.mode === 'light'? "#fff" : theme.palette.background.default
+        backgroundColor: theme.palette.mode === 'light'? "#fff" : theme.palette.background.default,
+        cursor:"pointer",
+        background:`${groupChat.id === id ? "burlywood" : "#fff"}`
+
       }}
-        p={2}>
+        p={2}
+
+        >
         <Stack direction="row" alignItems='center' justifyContent='space-between'>
           <Stack direction='row' spacing={2}>
             {online ? <StyledBadge overlap='circular' anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
@@ -24,7 +42,7 @@ const ChatElement = ({id,name, img, msg, time,online, unread}) => {
                 {name}
               </Typography>
               <Typography variant='caption'>
-                {msg}
+              {truncateMessage(msg, 7)}
               </Typography>
             </Stack>
             </Stack>
@@ -32,9 +50,9 @@ const ChatElement = ({id,name, img, msg, time,online, unread}) => {
               <Typography sx={{fontWeight:600}} variant='caption'>
                 {time}
               </Typography>
-              <Badge color='primary' badgeContent={unread}>
+              {/* <Badge color='primary' badgeContent={unread}>
   
-              </Badge>
+              </Badge> */}
             </Stack>
           
           

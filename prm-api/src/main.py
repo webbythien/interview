@@ -49,4 +49,4 @@ if settings.ENVIRONMENT.is_deployed:
 async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
-# app.include_router(chat_router, prefix="/chat", tags=["Chat"])
+app.include_router(chat_router, prefix="/chat", tags=["Chat"])

@@ -1,5 +1,5 @@
 // provider === component
-import { createContext, useEffect } from "react";
+import { createContext, useEffect, useState } from "react";
 import { defaultSettings } from "../config";
 import useLocalStorage from "../hooks/useLocalStorage";
 import getColorPresets, {
@@ -163,6 +163,8 @@ const SettingsProvider = ({ children }) => {
     });
   };
 
+
+  const [groupChat, setGroupChat] = useState(0)
   return (
     <SettingsContext.Provider
       value={{
@@ -196,6 +198,9 @@ const SettingsProvider = ({ children }) => {
 
         // Reset
         onResetSetting,
+
+        groupChat,
+        setGroupChat
       }}
     >
       {children}
