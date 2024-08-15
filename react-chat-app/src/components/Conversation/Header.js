@@ -1,4 +1,4 @@
-import { Avatar, Box, Typography,IconButton, Divider,Stack, } from '@mui/material'
+import { Avatar, Box, Typography,IconButton, Divider,Stack, AvatarGroup, } from '@mui/material'
 import { CaretDown, MagnifyingGlass, Phone,VideoCamera } from 'phosphor-react'
 import React from 'react';
 import { useTheme } from "@mui/material/styles";
@@ -6,10 +6,13 @@ import { faker } from '@faker-js/faker';
 import StyledBadge from '../StyledBadge';
 import { ToggleSidebar } from '../../redux/slices/app';
 import { useDispatch } from 'react-redux';
+import useSettings from '../../hooks/useSettings';
 
 const Header = () => {
   const dispatch = useDispatch();
   const theme = useTheme();
+  const { groupChat, setGroupChat } = useSettings();
+
   return (
     <Box p={2} sx={{ width:'100%', backgroundColor: theme.palette.mode === 'light' ? '#F8FAFF' : theme.palette.background.paper, boxShadow:'0px 0px 2px rgba(0,0,0,0.25)'}}>
     <Stack alignItems={'center'} direction='row' justifyContent={'space-between'}
@@ -26,13 +29,19 @@ const Header = () => {
                     horizontal: "right",
                 }}
                 variant="dot">
-                    <Avatar alt={faker.name.fullName()} src={faker.image.avatar()}/>
+                    <AvatarGroup total={groupChat?.member_count}>
+                        {groupChat?.recent_senders?.length >0 &&
+                            groupChat.recent_senders.map(item => (
+                                <Avatar alt={item.toUpperCase()} src="/static/images/avatar/2.jpg" />
+                            ))
+                        }
+                    </AvatarGroup>
                 </StyledBadge>
                 
             </Box>
             <Stack spacing={0.2}>
                     <Typography variant='subtitle2'>
-                        {faker.name.fullName()}
+                        {groupChat?.name || "No name"}
                     </Typography>
                     <Typography variant='caption'>
                         Online

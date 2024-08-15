@@ -6,6 +6,8 @@ import getColorPresets, {
   defaultPreset,
   colorPresets,
 } from "../utils/getColorPresets";
+import io from "socket.io-client";
+
 
 const initialState = {
   ...defaultSettings,
@@ -165,6 +167,55 @@ const SettingsProvider = ({ children }) => {
 
 
   const [groupChat, setGroupChat] = useState(0)
+  const connectSocket = () => {
+    const userId = localStorage.getItem("uuid")
+    // Connect to the Socket.io server
+    const socket = io("https://prm-socket.webbythien.com");
+
+    socket.on("connect", () => {
+      console.log("Connected to the Socket.io server", socket.id);
+
+      // Subscribe to a merchant - change merchant_id
+      socket.emit("subscribe", { merchant_id: `${userId}` });
+      console.log("emit subscribe with user id ", userId);
+
+      socket.off("notification");
+      // Get notification
+      socket.on("message", (data) => {
+        console.log('message: ',data);
+
+        // //@ts-ignore
+        // setNotifications((prev) => {
+        //   //@ts-ignore
+        //   return [data, ...prev];
+        // });
+
+        // setCountNoti((prev) => ++prev);
+      });
+     
+    });
+
+    // Event handler for disconnection
+    socket.on("disconnect", () => {
+      console.log("Disconnected from the Socket.io server", socket.id);
+    });
+
+    // Event handler for errors
+    socket.on("error", (e) => {
+      console.log("Error", e);
+    });
+
+    // Clean up the socket connection when the component is unmounted
+    return () => {
+      socket.disconnect();
+    };
+  };
+
+  useEffect(()=>{
+    connectSocket()
+  },[])
+
+  
   return (
     <SettingsContext.Provider
       value={{

@@ -17,14 +17,14 @@ const StyledInput = styled(TextField)(({ theme }) => ({
         color:'#4da5fe',
         icon: <Image size={24}/>,
         y:102,
-        title:'Photo/Video/Document'
+        title:'Photo/Video'
     },
-    // {
-    //     color:'#0159b2',
-    //     icon: <File size={24}/>,
-    //     y:312,
-    //     title:'Document'
-    // },
+    {
+        color:'#0159b2',
+        icon: <File size={24}/>,
+        y:312,
+        title:'Document'
+    },
   ];
 
 const ChatInput = ({setOpenPicker}) =>{

@@ -17,6 +17,7 @@ from fastapi import (
     Query,
     Path,
     Request,
+    Form
 )
 from sqlalchemy import asc, desc, func, or_,select,case
 from typing import List, Optional
@@ -144,7 +145,8 @@ async def get_all_groups(
             Group,
             func.count(GroupConversation.id).label("member_count")
         ).outerjoin(GroupConversation, Group.id == GroupConversation.group_id)\
-         .group_by(Group.id)
+         .group_by(Group.id)\
+         .order_by(desc(Group.id))  # Sort by group ID in descending order
         
         total_groups = groups_query.count()
 
@@ -154,7 +156,7 @@ async def get_all_groups(
         result = []
         for group, member_count in groups:
             group_id = group.id
-            
+
             # Get the 3 most recent senders by username
             recent_senders_query = db.query(
                 GroupConversation.username
@@ -179,18 +181,20 @@ async def get_all_groups(
                         )
                     ).first()
                 recent_message = most_recent_message.message if most_recent_message else None
+                time_to_display = recent_message_query.strftime("%a %H:%M")  # Format datetime
             else:
                 recent_message = None
+                time_to_display = group.created_at.strftime("%a %H:%M")  # Format datetime from group
 
             result.append({
                 "id": group.id,
                 "name": group.name,
-                "time": "15h:05",#group.created_at.isoformat(),  # Convert datetime to string
+                "time": time_to_display,
                 "member_count": member_count,
                 "recent_senders": recent_senders,
                 "msg": recent_message if recent_message is not None else "Welcome to new group",
-                "online":True,
-                "unread":False,
+                "online": True,
+                "unread": False,
             })
 
         return JSONResponse(
@@ -253,6 +257,59 @@ async def join_group(
         traceback.print_exc()
         logging.error(f"Error joining group: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to join group")
+
+
+@router.post("/conversations", status_code=status.HTTP_201_CREATED)
+async def create_conversation(
+    sender_uuid: str = Form(...),
+    reciever_id: int = Form(...),
+    message: str = Form(None),
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Determine subtype
+        subtype = None
+        file_url = None
+        
+        if file:
+            content_type = file.content_type
+            if content_type.startswith('image/'):
+                subtype = 'img'
+                file_url = S3AWSHelpers.upload_image(file, "PRM")
+            elif content_type in ['application/pdf', 'application/msword']:
+                subtype = 'doc'
+                file_url = S3AWSHelpers.upload_doc(file, "PRM")
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported file type")
+
+        # Create a new conversation
+        new_conversation = Conversation(
+            sender_uuid=sender_uuid,
+            reciever_id=reciever_id,
+            message=message,
+            type="msg",
+            subtype=subtype,
+            created_at=datetime.utcnow(),  # Ensure consistent timezone usage
+            updated_at=datetime.utcnow()
+        )
+        db.add(new_conversation)
+        db.commit()
+        db.refresh(new_conversation)
+
+        return {
+            "id": new_conversation.id,
+            "sender_uuid": new_conversation.sender_uuid,
+            "reciever_id": new_conversation.reciever_id,
+            "message": new_conversation.message,
+            "type": new_conversation.type,
+            "subtype": new_conversation.subtype,
+            "file_url": file_url
+        }
+    
+    except Exception as e:
+        print(f"Error creating conversation: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create conversation")
     
 # @router.post("")
 # async def send_message(
