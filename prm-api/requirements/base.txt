@@ -1,0 +1,25 @@
+redis==4.5.5
+alembic==1.9.1
+bcrypt
+
+databases[asyncpg]==0.8.0
+
+orjson==3.8.4
+# psycopg2==2.9.5
+psycopg2-binary==2.9.9
+python-jose==3.3.0
+SQLAlchemy==1.4.46
+httpx==0.23.3
+
+pydantic[email]==2.5.3
+pydantic-settings==2.1.0
+fastapi==0.109.0
+uvicorn[standard]==0.20.0
+
+sentry-sdk==1.12.1
+celery[amqp]==5.3.1
+pydash==7.0.4
+aiohttp==3.8.4
+cryptography==41.0.1
+socket_io_emitter
+fastapi-mail

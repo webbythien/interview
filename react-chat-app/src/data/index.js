@@ -226,12 +226,13 @@ const Chat_History = [
     message: "Ya sure, sending you a pic",
     uuid:"123"
   },
-
   {
     type: "msg",
     subtype: "img",
     message: "Here You Go",
-    img: faker.image.abstract(),
+    img: [
+      faker.image.abstract(),faker.image.abstract(),
+    ],
     uuid:"123"
   },
   {

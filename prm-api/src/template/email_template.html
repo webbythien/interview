@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-image: url('path/to/your/logo.png');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 50%;
+            background-opacity: 0.1;
+        }
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .invoice-table th {
+            background-color: #f2f2f2;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Hello {name},</h2>
+    <p>Thank you for your order. Here's your invoice:</p>
+    <table class="invoice-table">
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+        </tr>
+        {product_rows}
+        <tr>
+            <td colspan="3" style="text-align: right;">Shipping Fee:</td>
+            <td>{shipping_fee}</td>
+        </tr>
+        <tr class="total-row">
+            <td colspan="3" style="text-align: right;">Total:</td>
+            <td>{total}</td>
+        </tr>
+    </table>
+    <p>If you have any questions, please don't hesitate to contact us.</p>
+    <p>Best regards,<br>Your Company Name</p>
+</body>
+</html>

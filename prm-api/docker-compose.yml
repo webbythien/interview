@@ -1,0 +1,97 @@
+version: '3.7'
+
+services:
+  service:
+    image: prm_api
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - ./:/src
+    ports:
+      - "8881:8000"
+    command: ./scripts/start-dev.sh
+  scan:
+    image: scan-product-payment
+    container_name: scan-product-payment
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile.scan
+    restart: always
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    command: python src/scan.py
+  worker:
+    image: worker-message-prm
+    container_name: worker-message-prm
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    command: celery -A src.worker worker -Q order_queue,message_queue -l INFO
+
+# networks:
+#   base-network:
+#     external: true
+
+
+
+# version: "3.8"
+
+# services:
+#   postgres:
+#     container_name: tripseg-postgres
+#     image: postgres:16.2
+#     restart: always
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     environment:
+#       POSTGRES_USER: tripseg
+#       POSTGRES_PASSWORD: 400qyS3ce4tM
+#       POSTGRES_DB: tripseg
+
+#   redis-single:
+#     container_name: tripseg-redis
+#     image: redis:7.2.4
+#     restart: always
+#     ports:
+#       - "6379:6379"
+#     environment:
+#       REDIS_USERNAME: tripseg
+#       REDIS_PASSWORD: 400qyS3ce4tM
+#     volumes:
+#       - redis_data:/data
+
+#   rabbitmq:
+#     container_name: tripseg-rabbitmq
+#     image: rabbitmq:3.12.13-management
+#     restart: always
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+#     environment:
+#       RABBITMQ_DEFAULT_USER: tripseg
+#       RABBITMQ_DEFAULT_PASS: 400qyS3ce4tM
+#     volumes:
+#       - rabbitmq_data:/var/lib/rabbitmq
+#       - rabiiqmq_logs:/var/log/rabbitmq
+
+# volumes:
+#   postgres_data:
+#     driver: local
+#   rabbitmq_data:
+#     driver: local
+#   rabiiqmq_logs:
+#     driver: local

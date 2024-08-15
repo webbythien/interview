@@ -136,7 +136,6 @@ const ReplyMsg = ({ el, menu }) => {
         </Stack>
     );
 };
-
 const MediaMsg = ({ el, menu }) => {
     const theme = useTheme();
     const incoming = getIncomingStatus(el);
@@ -148,7 +147,9 @@ const MediaMsg = ({ el, menu }) => {
                     theme.palette.primary.main, borderRadius: 1.5, width: 'max-content'
             }}>
                 <Stack spacing={1}>
-                    <img src={el.img} alt={el.message} style={{ maxHeight: 210, borderRadius: '10px' }} />
+                    {el.img.map((image, index) => (
+                        <img key={index} src={image} alt={el.message} style={{ maxHeight: 210, borderRadius: '10px' }} />
+                    ))}
                     <Typography variant='body2' color={incoming ? theme.palette.text : '#fff'}>
                         {el.message}
                     </Typography>
@@ -159,6 +160,7 @@ const MediaMsg = ({ el, menu }) => {
         </Stack>
     );
 };
+
 
 const TextMsg = ({ el, menu }) => {
     const theme = useTheme();
