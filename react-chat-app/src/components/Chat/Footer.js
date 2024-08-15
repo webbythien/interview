@@ -71,7 +71,7 @@ const ChatInput = ({ openPicker, setOpenPicker }) => {
   return (
     <StyledInput
       fullWidth
-      placeholder="Write a message..."
+      placeholder="Write your message..."
       variant="filled"
       InputProps={{
         disableUnderline: true,
