@@ -24,7 +24,7 @@ import axios from "axios";
 import useSettings from "../../hooks/useSettings";
 
 const Chats = () => {
-  const { setGroupChat,setChatHistory,setLoadingHistory } = useSettings();
+  const { setGroupChat,setChatHistory,setLoadingHistory,setGroupChatMap } = useSettings();
 
   const theme = useTheme();
   const BASE_URL = "http://localhost:8000/v1/api/chat";
@@ -45,6 +45,10 @@ const Chats = () => {
         setChatList(response.data.groups)
         setGroupChat(response.data.groups[0])
         setChatHistory(response.data.groups[0].id)
+        setGroupChatMap((prev) => ({
+          ...prev,
+          [response.data.groups[0].id]: [],
+        }));
       }
     } catch (error) {
       console.error("Error fetching groups:", error);

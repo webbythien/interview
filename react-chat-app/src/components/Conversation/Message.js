@@ -1,5 +1,5 @@
 import { Box, Stack } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import { Chat_History } from "../../data";
 import {
   DocMsg,
@@ -12,8 +12,9 @@ import {
 import useSettings from "../../hooks/useSettings";
 import { ClipLoader } from "react-spinners";
 const Message = ({ menu }) => {
-  const { chatHistory, loadingHistory } = useSettings();
+  const { chatHistory, loadingHistory,groupChat, groupChatMap } = useSettings();
 
+  
   return (
     <Box p={3}>
       <Stack spacing={3}>
@@ -28,8 +29,8 @@ const Message = ({ menu }) => {
              <ClipLoader  size={80} speedMultiplier={0.6}/>
           </div>
         ) : (
-          chatHistory?.length > 0 ?
-          chatHistory.map((el) => {
+          groupChatMap[groupChat?.id]?.length > 0 ?
+          groupChatMap[groupChat?.id].map((el) => {
             switch (el.type) {
               case "divider":
                 return <TimeLine el={el} />;

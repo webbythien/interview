@@ -151,6 +151,7 @@ async def send_message_task(
 
         # Construct the message data to emit
         new_message_data = {
+            "receiver_id":receiver_id,
             "type": "msg",
             "message": message,
             "uuid": sender_uuid,

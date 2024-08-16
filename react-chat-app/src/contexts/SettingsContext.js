@@ -165,13 +165,15 @@ const SettingsProvider = ({ children }) => {
     });
   };
 
+  const [groupChat, setGroupChat] = useState(0);
+  const [groupChatMap, setGroupChatMap] = useState({});
+  const [chatHistory, setChatHistory] = useState([]);
+  const [unreadMap, setUnreadMap] = useState({});
 
-  const [groupChat, setGroupChat] = useState(0)
-  const [chatHistory, setChatHistory] = useState([])
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
-  const [loadingHistory, setLoadingHistory] = useState(true)
   const connectSocket = () => {
-    const userId = localStorage.getItem("uuid")
+    const userId = localStorage.getItem("uuid");
     // Connect to the Socket.io server
     const socket = io("https://prm-socket.webbythien.com");
 
@@ -186,21 +188,72 @@ const SettingsProvider = ({ children }) => {
       socket.off("message");
       // Get notification
       socket.on("message", (data) => {
-        const { task_id, ...restData } = data;
+        const { task_id, receiver_id, ...restData } = data;
 
-        setChatHistory((prevChatHistory) => {
-          const index = prevChatHistory.findIndex(item => item.id === data.task_id);
-      
-          if (index > -1) {
-            const updatedChatHistory = [...prevChatHistory];
-            updatedChatHistory[index] = restData;
-            return updatedChatHistory;
+        // setChatHistory((prevChatHistory) => {
+        //   const index = prevChatHistory.findIndex(item => item.id === data.task_id);
+
+        //   if (index > -1) {
+        //     const updatedChatHistory = [...prevChatHistory];
+        //     updatedChatHistory[index] = restData;
+        //     return updatedChatHistory;
+        //   } else {
+        //     return [...prevChatHistory, data];
+        //   }
+        // });
+        setGroupChatMap((prevGroupChatMap) => {
+          if (prevGroupChatMap[receiver_id]) {
+            console.log(
+              "prevGroupChatMap[receiver_id]: ",
+              prevGroupChatMap[receiver_id]
+            );
+            const index = prevGroupChatMap[receiver_id].findIndex(
+              (item) => item.id === data.task_id
+            );
+            console.log("index: ", index);
+            if (index > -1) {
+              const updatedMessages = [...prevGroupChatMap[receiver_id]];
+
+              updatedMessages[index] = restData;
+              return {
+                ...prevGroupChatMap,
+                [receiver_id]: updatedMessages,
+              };
+            } else {
+              console.log("unread ", unreadMap);
+              setUnreadMap((prevUnread) => {
+                return {
+                  ...prevUnread,
+                  [receiver_id]:
+                    typeof prevUnread[receiver_id] === "number" &&
+                    prevUnread[receiver_id] > 0
+                      ? prevUnread[receiver_id] + 1
+                      : 1,
+                };
+              });
+              return {
+                ...prevGroupChatMap,
+                [receiver_id]: [...prevGroupChatMap[receiver_id], restData],
+              };
+            }
           } else {
-            return [...prevChatHistory, data];
+            // If groupId does not exist, initialize it with newMessages
+            console.log("unread ", unreadMap);
+            setUnreadMap((prevUnread) => {
+              return {
+                ...prevUnread,
+                [receiver_id]: prevUnread[receiver_id]
+                  ? prevUnread[receiver_id]++
+                  : 1,
+              };
+            });
+            return {
+              ...prevGroupChatMap,
+              [receiver_id]: [restData],
+            };
           }
         });
       });
-     
     });
 
     // Event handler for disconnection
@@ -219,33 +272,39 @@ const SettingsProvider = ({ children }) => {
     };
   };
 
-  useEffect(()=>{
-    connectSocket()
-  },[])
+  useEffect(() => {
+    connectSocket();
+  }, []);
 
   const fetchMessages = async (groupId, limit, offset, startId = null) => {
     try {
-      const response = await axios.get(`http://localhost:8000/v1/api/chat/groups/${groupId}/messages`, {
-        params: {
-          limit,
-          offset,
-          start_id: startId
+      const response = await axios.get(
+        `http://localhost:8000/v1/api/chat/groups/${groupId}/messages`,
+        {
+          params: {
+            limit,
+            offset,
+            start_id: startId,
+          },
         }
-      }); 
-      setChatHistory(response.data.messages)
-      console.log("response.data: ", response)
-      setLoadingHistory(false)
+      );
+      setChatHistory(response.data.messages);
+      console.log("response.data: ", response);
+      setLoadingHistory(false);
+      setGroupChatMap((prev) => ({
+        ...prev,
+        [groupId]: response.data.messages,
+      }));
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      setLoadingHistory(false)
+      console.error("Error fetching messages:", error);
+      setLoadingHistory(false);
       // throw error; // Optionally rethrow the error to be handled by the calling code
     }
   };
-  useEffect(()=>{
-    fetchMessages(groupChat?.id)
-  },[groupChat])
+  useEffect(() => {
+    fetchMessages(groupChat?.id);
+  }, [groupChat]);
 
-  
   return (
     <SettingsContext.Provider
       value={{
@@ -285,7 +344,11 @@ const SettingsProvider = ({ children }) => {
         chatHistory,
         setChatHistory,
         loadingHistory,
-        setLoadingHistory
+        setLoadingHistory,
+        groupChatMap,
+        setGroupChatMap,
+        setUnreadMap,
+        unreadMap,
       }}
     >
       {children}
@@ -293,6 +356,6 @@ const SettingsProvider = ({ children }) => {
   );
 };
 
-export {SettingsContext};
+export { SettingsContext };
 
 export default SettingsProvider;

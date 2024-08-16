@@ -5,10 +5,18 @@ import useSettings from '../hooks/useSettings';
 
 //single chat element
 const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders, sent}) => {
-      const { groupChat, setGroupChat,setLoadingHistory } = useSettings();
+    const { groupChat, setGroupChat,setLoadingHistory,groupChatMap,unreadMap,setUnreadMap  } = useSettings();
     const handleSetGroupChat = () =>{
+      if (groupChat.id !== id ){
       setLoadingHistory(true)
       setGroupChat({id,name, img, msg, time,online, unread,member_count,recent_senders,sent })
+      } 
+      setUnreadMap((prevUnread) => {
+        return {
+          ...prevUnread,
+          [id]:0
+        };
+      });
     }
     const theme = useTheme();
     const truncateMessage = (msg, charLimit) => {
@@ -43,7 +51,7 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
                 {name}
               </Typography>
               <Typography variant='caption'>
-              {truncateMessage(msg, 7)}
+              {truncateMessage((groupChatMap[id])?.length> 0 ?(groupChatMap[id])[groupChatMap[id].length - 1]?.message || msg : msg, 7)}
               </Typography>
             </Stack>
             </Stack>
@@ -51,9 +59,9 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
               <Typography sx={{fontWeight:600}} variant='caption'>
                 {time}
               </Typography>
-              {/* <Badge color='primary' badgeContent={unread}>
+              <Badge color='primary' badgeContent={unreadMap[id] || 0}>
   
-              </Badge> */}
+              </Badge>
             </Stack>
           
           

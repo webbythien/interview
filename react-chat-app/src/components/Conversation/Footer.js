@@ -147,7 +147,7 @@ const ChatInput = ({ setOpenPicker, setMessage, message,setFileList }) => {
 
 const Footer = () => {
   const theme = useTheme();
-  const { groupChat, setChatHistory } = useSettings();
+  const { groupChat, setChatHistory, setGroupChatMap } = useSettings();
   const [message, setMessage] = useState("");
 
   const [openPicker, setOpenPicker] = useState(false);
@@ -264,8 +264,11 @@ const Footer = () => {
         img: uploadedUrls.map((file) => file.url),
       };
 
-      console.log("temp: ", temp);
-      setChatHistory((prevChatHistory) => [...prevChatHistory, temp]);
+      // setChatHistory((prevChatHistory) => [...prevChatHistory, temp]);
+      setGroupChatMap((prev) => ({
+        ...prev,
+        [groupChat.id]: [...(prev[groupChat.id] || []), temp],
+      }));
     } catch (error) {
       console.error("Error sending message", error);
     }
