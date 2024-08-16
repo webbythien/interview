@@ -15,9 +15,9 @@ const Message = ({ menu }) => {
   const { chatHistory, loadingHistory, groupChat, groupChatMap } =
     useSettings();
 
-  useEffect(() => {
-    console.log("groupChatMap: ", groupChatMap);
-  }, [groupChatMap]);
+  // useEffect(() => {
+  //   console.log("groupChatMap: ", groupChatMap);
+  // }, [groupChatMap]);
   return (
     <Box p={3}>
       <Stack spacing={3}>

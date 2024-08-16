@@ -9,13 +9,13 @@ import useSettings from "../../hooks/useSettings";
 const Conversation = () => {
   const theme = useTheme();
   const boxRef = useRef(null);
-  const { chatHistory, loadingHistory, groupChat } = useSettings();
+  const { chatHistory, loadingHistory, groupChat, groupChatMap } = useSettings();
 
   useEffect(() => {
     if (boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight;
     }
-  }, [chatHistory, loadingHistory]);
+  }, [chatHistory, loadingHistory,groupChatMap]);
 
   return (
     <Stack height={"100%"} maxHeight={"100vh"} width={"auto"}>
