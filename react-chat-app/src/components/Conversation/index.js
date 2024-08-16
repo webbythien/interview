@@ -9,15 +9,15 @@ import useSettings from "../../hooks/useSettings";
 const Conversation = () => {
   const theme = useTheme();
   const boxRef = useRef(null);
-  const { chatHistory, loadingHistory} = useSettings();
+  const { chatHistory, loadingHistory, groupChat } = useSettings();
 
   useEffect(() => {
     if (boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight;
     }
-  }, [chatHistory,loadingHistory]);
+  }, [chatHistory, loadingHistory]);
 
-  return (  
+  return (
     <Stack height={"100%"} maxHeight={"100vh"} width={"auto"}>
       {/* Chat header */}
       <Header />
@@ -31,7 +31,19 @@ const Conversation = () => {
         <Message menu={true} />
       </Box>
       {/* Chat footer */}
-      <Footer />
+      {groupChat?.join_group ? (
+        <Footer />
+      ) : (
+        <div
+          style={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        ></div>
+      )}
     </Stack>
   );
 };

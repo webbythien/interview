@@ -59,11 +59,9 @@ const Message = ({ menu }) => {
                 return <></>;
             }
           })
-        ) : groupChat.join_group ? (
+        ) : 
           "No data"
-        ) : (
-          "No join group"
-        )}
+        }
       </Stack>
     </Box>
   );

@@ -12,9 +12,9 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
 
     const handleSetGroupChat = () =>{
       try {
-        if (!join_group){
-          return
-        }
+        // if (!join_group){
+        //   return
+        // }
 
         if (groupChat.id !== id ){
           setLoadingHistory(true)
