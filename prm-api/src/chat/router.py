@@ -162,7 +162,6 @@ async def create_group(group_data: CreateGroupRequest, db: Session = Depends(get
         logging.error(f"Error creating group: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create group")
 
-
 @router.get("/groups/joined", status_code=status.HTTP_200_OK)
 async def get_joined_groups(
     user_uuid: str,
@@ -231,11 +230,12 @@ async def get_joined_groups(
                 "id": group.id,
                 "name": group.name,
                 "time": time_to_display,
-                "member_count": member_count or 0,  # Use 0 if member_count is None
+                "member_count": member_count or 0,
                 "recent_senders": recent_senders,
                 "msg": recent_message if recent_message is not None else "Welcome to new group",
                 "online": True,
                 "unread": False,
+                "join_group": True  # Added field
             })
 
         return JSONResponse(
@@ -267,7 +267,7 @@ async def get_not_joined_groups(
         # Query to get groups that the user has not joined along with member counts
         not_joined_groups_query = db.query(
             Group,
-            func.count(GroupConversation.id).label("member_count")
+            func.count(GroupConversation.user_uuid).label("member_count")
         ).outerjoin(GroupConversation, Group.id == GroupConversation.group_id)\
          .filter(~Group.id.in_(joined_group_ids))\
          .group_by(Group.id)\
@@ -306,20 +306,21 @@ async def get_not_joined_groups(
                         )
                     ).first()
                 recent_message = most_recent_message.message if most_recent_message else None
-                time_to_display = recent_message_query.strftime("%a %H:%M")  # Format datetime
+                time_to_display = recent_message_query.strftime("%a %H:%M")
             else:
                 recent_message = None
-                time_to_display = group.created_at.strftime("%a %H:%M")  # Format datetime from group
+                time_to_display = group.created_at.strftime("%a %H:%M")
 
             result.append({
                 "id": group.id,
                 "name": group.name,
                 "time": time_to_display,
-                "member_count": member_count,
+                "member_count": member_count or 0,
                 "recent_senders": recent_senders,
                 "msg": recent_message if recent_message is not None else "Welcome to new group",
                 "online": True,
                 "unread": False,
+                "join_group": False  # Added field
             })
 
         return JSONResponse(
@@ -336,7 +337,6 @@ async def get_not_joined_groups(
         traceback.print_exc()
         logging.error(f"Error fetching not joined groups: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch not joined groups")
-
 
 
 @router.post("/join-group", status_code=status.HTTP_200_OK)
@@ -393,7 +393,7 @@ async def create_conversation(request: SendMessageRequest):
         
         # Chuyển đổi các đối tượng FileInfo thành dict
         files_dict = [file.dict() for file in request.files] if request.files else None
-        
+        print("files_dict: ", files_dict)
         task_manage.send_task(
             "send_message_task",
             kwargs={

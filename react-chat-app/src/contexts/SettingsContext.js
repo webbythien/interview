@@ -171,6 +171,7 @@ const SettingsProvider = ({ children }) => {
   const [chatHistory, setChatHistory] = useState([]);
   const [unreadMap, setUnreadMap] = useState({});
   const [chatList, setChatList] = useState([])
+  const [chatListUnjoin, setChatListUnjoin] = useState([])
 
   const [loadingHistory, setLoadingHistory] = useState(true);
 
@@ -289,6 +290,10 @@ const SettingsProvider = ({ children }) => {
 
   const fetchMessages = async (groupId, limit, offset, startId = null) => {
     try {
+      if (!groupId){
+        setLoadingHistory(false);
+        return 
+      }
       const response = await axios.get(
         `http://localhost:8000/v1/api/chat/groups/${groupId}/messages`,
         {
@@ -306,8 +311,9 @@ const SettingsProvider = ({ children }) => {
         [groupId]: response.data.messages,
       }));
     } catch (error) {
-      console.error("Error fetching messages:", error);
       setLoadingHistory(false);
+      console.error("Error fetching messages:", error);
+      setGroupChatMap({})
       // throw error; // Optionally rethrow the error to be handled by the calling code
     }
   };
@@ -360,7 +366,9 @@ const SettingsProvider = ({ children }) => {
         setUnreadMap,
         unreadMap,
         setChatList,
-        chatList
+        chatList,
+        setChatListUnjoin,
+        chatListUnjoin
       }}
     >
       {children}

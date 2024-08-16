@@ -135,8 +135,24 @@ async def send_message_task(
                 if file_type == 'img':
                     subtype = 'img'
                     img_urls.append(file_url)
+                    new_image = ConversationImage(
+                        conversation_id=new_conversation.id,
+                        img=file_url,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
+                    db.add(new_image)
+
                 elif file_type == 'doc':
                     subtype = 'doc'
+                    new_doc = Docs(
+                        conversation_id=new_conversation.id,
+                        name=filename,
+                        link=file_url,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
+                    db.add(new_doc)
                     doc_data = {
                         "name": filename,
                         "link": file_url
