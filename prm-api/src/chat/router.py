@@ -171,14 +171,29 @@ async def get_joined_groups(
     db: Session = Depends(get_db)
 ):
     try:
-        # Query to get groups that the user has joined along with member counts
+        # Subquery to get the latest message time for each group
+        latest_message_subquery = db.query(
+            Conversation.reciever_id,
+            func.max(Conversation.created_at).label('latest_message_time')
+        ).group_by(Conversation.reciever_id).subquery()
+
+        # Subquery to get the correct member count for each group
+        member_count_subquery = db.query(
+            GroupConversation.group_id,
+            func.count(func.distinct(GroupConversation.user_uuid)).label("member_count")
+        ).group_by(GroupConversation.group_id).subquery()
+
+        # Query to get groups that the user has joined along with correct member counts and latest message time
         joined_groups_query = db.query(
             Group,
-            func.count(GroupConversation.id).label("member_count")
-        ).outerjoin(GroupConversation, Group.id == GroupConversation.group_id)\
+            member_count_subquery.c.member_count,
+            latest_message_subquery.c.latest_message_time
+        ).join(GroupConversation, Group.id == GroupConversation.group_id)\
          .filter(GroupConversation.user_uuid == user_uuid)\
-         .group_by(Group.id)\
-         .order_by(desc(Group.id))  # Sort by group ID in descending order
+         .outerjoin(latest_message_subquery, Group.id == latest_message_subquery.c.reciever_id)\
+         .outerjoin(member_count_subquery, Group.id == member_count_subquery.c.group_id)\
+         .group_by(Group.id, member_count_subquery.c.member_count, latest_message_subquery.c.latest_message_time)\
+         .order_by(desc(latest_message_subquery.c.latest_message_time), desc(Group.created_at))
         
         total_groups = joined_groups_query.count()
 
@@ -186,7 +201,7 @@ async def get_joined_groups(
         joined_groups = joined_groups_query.offset(offset).limit(limit).all()
 
         result = []
-        for group, member_count in joined_groups:
+        for group, member_count, latest_message_time in joined_groups:
             group_id = group.id
 
             # Get the 3 most recent senders by username
@@ -198,31 +213,25 @@ async def get_joined_groups(
             recent_senders = [sender.username for sender in recent_senders_query]
 
             # Get the most recent message
-            recent_message_query = db.query(
-                func.max(Conversation.created_at).label("last_message_time")
-            ).filter(
-                Conversation.reciever_id == group_id
-            ).scalar()
-
-            if recent_message_query:
+            if latest_message_time:
                 most_recent_message = db.query(Conversation)\
                     .filter(
                         and_(
                             Conversation.reciever_id == group_id,
-                            Conversation.created_at == recent_message_query
+                            Conversation.created_at == latest_message_time
                         )
                     ).first()
                 recent_message = most_recent_message.message if most_recent_message else None
-                time_to_display = recent_message_query.strftime("%a %H:%M")  # Format datetime
+                time_to_display = latest_message_time.strftime("%a %H:%M")
             else:
                 recent_message = None
-                time_to_display = group.created_at.strftime("%a %H:%M")  # Format datetime from group
+                time_to_display = group.created_at.strftime("%a %H:%M")
 
             result.append({
                 "id": group.id,
                 "name": group.name,
                 "time": time_to_display,
-                "member_count": member_count,
+                "member_count": member_count or 0,  # Use 0 if member_count is None
                 "recent_senders": recent_senders,
                 "msg": recent_message if recent_message is not None else "Welcome to new group",
                 "online": True,
@@ -243,7 +252,7 @@ async def get_joined_groups(
         traceback.print_exc()
         logging.error(f"Error fetching joined groups: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch joined groups")
-
+     
 @router.get("/groups/not-joined", status_code=status.HTTP_200_OK)
 async def get_not_joined_groups(
     user_uuid: str,

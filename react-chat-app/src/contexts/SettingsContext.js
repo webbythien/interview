@@ -8,6 +8,7 @@ import getColorPresets, {
 } from "../utils/getColorPresets";
 import io from "socket.io-client";
 import axios from "axios";
+import SoundRecieve from "../assets/messenger-notification-sound-effect.mp3";
 
 const initialState = {
   ...defaultSettings,
@@ -169,104 +170,114 @@ const SettingsProvider = ({ children }) => {
   const [groupChatMap, setGroupChatMap] = useState({});
   const [chatHistory, setChatHistory] = useState([]);
   const [unreadMap, setUnreadMap] = useState({});
+  const [chatList, setChatList] = useState([])
 
   const [loadingHistory, setLoadingHistory] = useState(true);
 
+  // const [play, { sound }] = useSound(SoundRecieve, { volume: 1.0 });
+
   const connectSocket = () => {
     const userId = localStorage.getItem("uuid");
-    // Connect to the Socket.io server
     const socket = io("https://prm-socket.webbythien.com");
 
     socket.on("connect", () => {
       console.log("Connected to the Socket.io server", socket.id);
 
-      // Subscribe to a merchant - change merchant_id
       socket.emit("subscribe", { room_id: `${userId}` });
-      console.log("emit subscribe with user id ", userId);
 
-      // socket.off("notification");
       socket.off("message");
-      // Get notification
+
       socket.on("message", (data) => {
         const { task_id, receiver_id, ...restData } = data;
 
-        // setChatHistory((prevChatHistory) => {
-        //   const index = prevChatHistory.findIndex(item => item.id === data.task_id);
-
-        //   if (index > -1) {
-        //     const updatedChatHistory = [...prevChatHistory];
-        //     updatedChatHistory[index] = restData;
-        //     return updatedChatHistory;
-        //   } else {
-        //     return [...prevChatHistory, data];
-        //   }
-        // });
         setGroupChatMap((prevGroupChatMap) => {
           if (prevGroupChatMap[receiver_id]) {
-            console.log(
-              "prevGroupChatMap[receiver_id]: ",
-              prevGroupChatMap[receiver_id]
-            );
             const index = prevGroupChatMap[receiver_id].findIndex(
               (item) => item.id === data.task_id
             );
-            console.log("index: ", index);
+
             if (index > -1) {
               const updatedMessages = [...prevGroupChatMap[receiver_id]];
-
               updatedMessages[index] = restData;
               return {
                 ...prevGroupChatMap,
                 [receiver_id]: updatedMessages,
               };
             } else {
-              console.log("unread ", unreadMap);
-              setUnreadMap((prevUnread) => {
-                return {
-                  ...prevUnread,
-                  [receiver_id]:
-                    typeof prevUnread[receiver_id] === "number" &&
-                    prevUnread[receiver_id] > 0
-                      ? prevUnread[receiver_id] + 1
-                      : 1,
-                };
+              const audioElement = new Audio(SoundRecieve);
+            
+              audioElement.play().then(() => {
+                console.log("Sound played successfully");
+              }).catch(error => {
+                console.error("Error playing sound:", error);
               });
-              return {
+              setUnreadMap((prevUnread) => (
+                {
+                ...prevUnread,
+                [receiver_id]:
+                  typeof prevUnread[receiver_id] === "number" &&
+                  prevUnread[receiver_id] > 0
+                    ? prevUnread[receiver_id] + 1
+                    : 1,
+              }));
+              
+              const a = {
                 ...prevGroupChatMap,
                 [receiver_id]: [...prevGroupChatMap[receiver_id], restData],
-              };
+                };
+              console.log("prevGroupChatMap : ",a)
+
+              return a
             }
           } else {
-            // If groupId does not exist, initialize it with newMessages
-            console.log("unread ", unreadMap);
-            setUnreadMap((prevUnread) => {
-              return {
-                ...prevUnread,
-                [receiver_id]: prevUnread[receiver_id]
-                  ? prevUnread[receiver_id]++
-                  : 1,
-              };
+            console.log("prevGroupChatMap : ",prevGroupChatMap)
+            const audioElement = new Audio(SoundRecieve);
+            
+            audioElement.play().then(() => {
+              console.log("Sound played successfully");
+            }).catch(error => {
+              console.error("Error playing sound:", error);
             });
+
+            setUnreadMap((prevUnread) => ({
+              ...prevUnread,
+              [receiver_id]:
+                typeof prevUnread[receiver_id] === "number" &&
+                prevUnread[receiver_id] > 0
+                  ? prevUnread[receiver_id] + 1
+                  : 1,
+            }));
             return {
               ...prevGroupChatMap,
               [receiver_id]: [restData],
             };
           }
         });
+
+        setChatList(prevList => {
+          const index = prevList.findIndex(chat => chat.id === receiver_id);
+  
+          if (index !== -1) {
+            const updatedChat = { ...prevList[index] };
+            
+            const newList = prevList.filter(chat => chat.id !== receiver_id);
+            
+            return [updatedChat, ...newList];
+          }
+          
+          return prevList;
+        });
       });
     });
 
-    // Event handler for disconnection
     socket.on("disconnect", () => {
       console.log("Disconnected from the Socket.io server", socket.id);
     });
 
-    // Event handler for errors
     socket.on("error", (e) => {
       console.log("Error", e);
     });
 
-    // Clean up the socket connection when the component is unmounted
     return () => {
       socket.disconnect();
     };
@@ -289,7 +300,6 @@ const SettingsProvider = ({ children }) => {
         }
       );
       setChatHistory(response.data.messages);
-      console.log("response.data: ", response);
       setLoadingHistory(false);
       setGroupChatMap((prev) => ({
         ...prev,
@@ -349,6 +359,8 @@ const SettingsProvider = ({ children }) => {
         setGroupChatMap,
         setUnreadMap,
         unreadMap,
+        setChatList,
+        chatList
       }}
     >
       {children}

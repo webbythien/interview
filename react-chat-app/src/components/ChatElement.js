@@ -5,8 +5,13 @@ import useSettings from '../hooks/useSettings';
 
 //single chat element
 const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders, sent}) => {
+  
+   
     const { groupChat, setGroupChat,setLoadingHistory,groupChatMap,unreadMap,setUnreadMap  } = useSettings();
+    
+
     const handleSetGroupChat = () =>{
+      // play()
       if (groupChat.id !== id ){
       setLoadingHistory(true)
       setGroupChat({id,name, img, msg, time,online, unread,member_count,recent_senders,sent })

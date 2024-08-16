@@ -24,7 +24,7 @@ import axios from "axios";
 import useSettings from "../../hooks/useSettings";
 
 const Chats = () => {
-  const { setGroupChat,setChatHistory,setLoadingHistory,setGroupChatMap } = useSettings();
+  const { setGroupChat,setChatHistory,setLoadingHistory,setGroupChatMap, groupChatMap ,setChatList, chatList} = useSettings();
 
   const theme = useTheme();
   const BASE_URL = "http://localhost:8000/v1/api/chat";
@@ -35,7 +35,6 @@ const Chats = () => {
     user_uuid:localStorage.getItem("uuid")
   };
 
-  const [chatList, setChatList] = useState([])
   const getGroups = async () => {
     try {
       setLoadingHistory(true)
