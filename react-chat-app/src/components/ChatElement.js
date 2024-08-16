@@ -50,7 +50,8 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
       
           if (itemToMove) {
             const updatedUnjoinList = prevUnjoinList.filter(item => item.id !== groupId);
-      
+            // const newItem = itemToMove
+            itemToMove.join_group= true
             setChatList((prevJoinList) => [...prevJoinList, itemToMove]);
       
             return updatedUnjoinList;
@@ -58,7 +59,7 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
       
           return prevUnjoinList;
         });
-
+        setGroupChat({id,name, img, msg, time,online, unread,member_count,recent_senders,sent,join_group: true })
       } catch (error) {
         console.error('Error joining group:', error);
       }
