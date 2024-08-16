@@ -42,12 +42,12 @@ const Actions = [
     y: 105,
     title: "Photo",
   },
-  {
-    color: "#0159b2",
-    icon: <File size={24} />,
-    y: 180,
-    title: "Document",
-  },
+  // {
+  //   color: "#0159b2",
+  //   icon: <File size={24} />,
+  //   y: 180,
+  //   title: "Document",
+  // },
 ];
 
 const ChatInput = ({ setOpenPicker, setMessage, message, setFileList }) => {
