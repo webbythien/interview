@@ -36,7 +36,7 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
 
     const handleJoinGroup = async () => {
       try {
-        const response = await axios.post('http://localhost:8000/v1/api/chat/join-group', {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/v1/api/chat/join-group`, {
           uuid: localStorage.getItem("uuid"),
           username: localStorage.getItem("username"),
           group_id: id,

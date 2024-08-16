@@ -295,7 +295,7 @@ const SettingsProvider = ({ children }) => {
         return 
       }
       const response = await axios.get(
-        `http://localhost:8000/v1/api/chat/groups/${groupId}/messages`,
+        `${process.env.REACT_APP_API_URL}/v1/api/chat/groups/${groupId}/messages`,
         {
           params: {
             limit,

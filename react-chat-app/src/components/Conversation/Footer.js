@@ -50,39 +50,39 @@ const Actions = [
   },
 ];
 
-const ChatInput = ({ setOpenPicker, setMessage, message,setFileList }) => {
+const ChatInput = ({ setOpenPicker, setMessage, message, setFileList }) => {
   const handleInputChange = (event) => {
     setMessage(event.target.value);
   };
   const [openAction, setOpenAction] = useState(false);
 
   const handleFileSelect = (type) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true; 
-    
-    if (type === 'Photo') {
-      input.accept = 'image/*';
-    } else if (type === 'Document') {
-      input.accept = '.doc,.docx,.pdf,.txt'; 
-    }else{
-        return
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+
+    if (type === "Photo") {
+      input.accept = "image/*";
+    } else if (type === "Document") {
+      input.accept = ".doc,.docx,.pdf,.txt";
+    } else {
+      return;
     }
-  
+
     input.onchange = (e) => {
       const files = Array.from(e.target.files);
-      const newFileList = files.map(file => ({
+      const newFileList = files.map((file) => ({
         uid: `rc-upload-${Date.now()}-${file.name}`,
         name: file.name,
-        status: 'done',
+        status: "done",
         url: URL.createObjectURL(file),
         originFileObj: file,
       }));
-      
-      setFileList(prevFileList => [...prevFileList, ...newFileList]);
-      setOpenAction(false)
+
+      setFileList((prevFileList) => [...prevFileList, ...newFileList]);
+      setOpenAction(false);
     };
-  
+
     input.click();
   };
 
@@ -188,7 +188,7 @@ const Footer = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/v1/api/chat/upload-files",
+        `${process.env.REACT_APP_API_URL}/v1/api/chat/upload-files`,
         {
           method: "POST",
           body: formData,
@@ -222,6 +222,9 @@ const Footer = () => {
     }
   };
   const handleSubmit = async () => {
+    if (fileList.length <= 0 && (message === "" || message === null)) {
+      return;
+    }
     let uploadedUrls = [];
     const data = {
       sender_uuid: localStorage.getItem("uuid"),
@@ -241,7 +244,7 @@ const Footer = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/v1/api/chat/conversations",
+        `${process.env.REACT_APP_API_URL}/v1/api/chat/conversations`,
         data,
         {
           headers: {
@@ -256,11 +259,11 @@ const Footer = () => {
       const temp = {
         type: "msg",
         message: message,
-        sent:1,
-        id:responseData.task_id,
-        uuid: localStorage.getItem("uuid"), 
+        sent: 1,
+        id: responseData.task_id,
+        uuid: localStorage.getItem("uuid"),
         created_at: new Date().toISOString(),
-        subtype: fileList.length > 0 ? "img" : null, 
+        subtype: fileList.length > 0 ? "img" : null,
         img: uploadedUrls.map((file) => file.url),
       };
 
@@ -310,60 +313,62 @@ const Footer = () => {
       }}
     >
       <Stack direction="row" alignItems={"center"} spacing={3}>
-       {fileList.length > 0 && <div
-          style={{
-            position: "absolute",
-            bottom: "90px",
-            width: "75%",
-            background: "white",
-            padding: "16px",
-            borderRadius: "16px",
-          }}
-        >
-          <Upload
-            onPreview={handlePreview}
-            onChange={handleChange}
-            listType="picture-card"
-            fileList={fileList}
-            beforeUpload={() => false}
+        {fileList.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "90px",
+              width: "75%",
+              background: "white",
+              padding: "16px",
+              borderRadius: "16px",
+            }}
           >
-            {fileList.length >= 4 ? null : uploadButton}
-          </Upload>
-          {uploading && (
-            <LinearProgress
-              variant="determinate"
-              value={uploadProgress}
-              sx={{ mt: 2 }}
-            />
-          )}
-          {previewOpen && (
-            <Modal
-              open={previewOpen}
-              onClose={() => setPreviewOpen(false)}
-              aria-labelledby="preview-modal"
-              aria-describedby="preview-modal-description"
+            <Upload
+              onPreview={handlePreview}
+              onChange={handleChange}
+              listType="picture-card"
+              fileList={fileList}
+              beforeUpload={() => false}
             >
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: "auto",
-                  bgcolor: "background.paper",
-                  boxShadow: 24,
-                  p: 4,
-                }}
+              {fileList.length >= 4 ? null : uploadButton}
+            </Upload>
+            {uploading && (
+              <LinearProgress
+                variant="determinate"
+                value={uploadProgress}
+                sx={{ mt: 2 }}
+              />
+            )}
+            {previewOpen && (
+              <Modal
+                open={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+                aria-labelledby="preview-modal"
+                aria-describedby="preview-modal-description"
               >
-                <img
-                  src={previewImage}
-                  alt="Preview"
-                  style={{ maxWidth: "100%", maxHeight: "80vh" }}
-                />
-              </Box>
-            </Modal>
-          )}
-        </div>}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: "auto",
+                    bgcolor: "background.paper",
+                    boxShadow: 24,
+                    p: 4,
+                  }}
+                >
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                    style={{ maxWidth: "100%", maxHeight: "80vh" }}
+                  />
+                </Box>
+              </Modal>
+            )}
+          </div>
+        )}
         <Stack sx={{ width: "100%" }}>
           {/* Chat Input */}
           <Box
@@ -378,7 +383,7 @@ const Footer = () => {
             <Picker
               theme={theme.palette.mode}
               data={data}
-              onEmojiSelect={console.log}
+              onEmojiSelect={(e)=>setMessage(prev => `${prev} ${e.native}`)}
             />
           </Box>
           <ChatInput

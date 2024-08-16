@@ -86,7 +86,7 @@ const Chats = () => {
     setValue(index);
   };
 
-  const BASE_URL = "http://localhost:8000/v1/api/chat";
+  const BASE_URL = `${process.env.REACT_APP_API_URL}/v1/api/chat`;
   const ENDPOINT = "/groups/joined";
   const params = {
     limit: 10,
