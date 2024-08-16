@@ -2,12 +2,14 @@ import { Avatar, Badge, Box, Button, Stack, Typography } from '@mui/material';
 import {useTheme , styled} from '@mui/material/styles';
 import StyledBadge from './StyledBadge';
 import useSettings from '../hooks/useSettings';
+import axios from 'axios';
 
 //single chat element
 const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders, sent, join_group}) => {
   
    
-    const { groupChat, setGroupChat,setLoadingHistory,groupChatMap,unreadMap,setUnreadMap  } = useSettings();
+    const { groupChat, setGroupChat,setLoadingHistory,groupChatMap,unreadMap,setUnreadMap,setChatList,
+      setChatListUnjoin,  } = useSettings();
     
 
     const handleSetGroupChat = () =>{
@@ -31,6 +33,37 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
       }
      
     }
+
+    const handleJoinGroup = async () => {
+      try {
+        const response = await axios.post('http://localhost:8000/v1/api/chat/join-group', {
+          uuid: localStorage.getItem("uuid"),
+          username: localStorage.getItem("username"),
+          group_id: id,
+        });
+        console.log("join group",response.data.group);
+        const groupJoin = response.data.group
+        const groupId = groupJoin.id
+
+        setChatListUnjoin((prevUnjoinList) => {
+          const itemToMove = prevUnjoinList.find(item => item.id === groupId);
+      
+          if (itemToMove) {
+            const updatedUnjoinList = prevUnjoinList.filter(item => item.id !== groupId);
+      
+            setChatList((prevJoinList) => [...prevJoinList, itemToMove]);
+      
+            return updatedUnjoinList;
+          }
+      
+          return prevUnjoinList;
+        });
+
+      } catch (error) {
+        console.error('Error joining group:', error);
+      }
+    };
+
     const theme = useTheme();
     const truncateMessage = (msg, charLimit) => {
       if (msg.length > charLimit) {
@@ -69,7 +102,7 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
                 {truncateMessage((groupChatMap[id])?.length> 0 ?(groupChatMap[id])[groupChatMap[id].length - 1]?.message || msg : msg, 7)}
               </Typography>
               :
-              <Button>
+              <Button onClick={handleJoinGroup}>
                 Join Group  
               </Button>
               }
