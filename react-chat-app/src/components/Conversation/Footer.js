@@ -50,9 +50,16 @@ const Actions = [
   // },
 ];
 
-const ChatInput = ({ setOpenPicker, setMessage, message, setFileList }) => {
+const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter }) => {
   const handleInputChange = (event) => {
     setMessage(event.target.value);
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      onEnter();
+    }
   };
   const [openAction, setOpenAction] = useState(false);
 
@@ -93,6 +100,7 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList }) => {
       variant="filled"
       value={message}
       onChange={handleInputChange}
+      onKeyPress={handleKeyPress}
       InputProps={{
         disableUnderline: true,
         startAdornment: (
@@ -391,6 +399,7 @@ const Footer = () => {
             setMessage={setMessage}
             message={message}
             setFileList={setFileList}
+            onEnter={handleSubmit}
           />
         </Stack>
 

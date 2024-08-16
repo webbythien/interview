@@ -5,7 +5,7 @@ import useSettings from '../hooks/useSettings';
 import axios from 'axios';
 
 //single chat element
-const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders, sent, join_group}) => {
+const ChatElement = ({id,name, img, msg, time, online, unread, member_count, recent_senders, sent, join_group,setValue}) => {
   
    
     const { groupChat, setGroupChat,setLoadingHistory,groupChatMap,unreadMap,setUnreadMap,setChatList,
@@ -52,13 +52,14 @@ const ChatElement = ({id,name, img, msg, time, online, unread, member_count, rec
             const updatedUnjoinList = prevUnjoinList.filter(item => item.id !== groupId);
             // const newItem = itemToMove
             itemToMove.join_group= true
-            setChatList((prevJoinList) => [...prevJoinList, itemToMove]);
+            setChatList((prevJoinList) => [itemToMove,...prevJoinList]);
       
             return updatedUnjoinList;
           }
       
           return prevUnjoinList;
         });
+        setValue(0)
         setGroupChat({id,name, img, msg, time,online, unread,member_count,recent_senders,sent,join_group: true })
       } catch (error) {
         console.error('Error joining group:', error);

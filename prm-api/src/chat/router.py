@@ -126,12 +126,14 @@ async def send_mail():
     return {
         "msg": "Send message successfully"
     }
-
 @router.post("/groups", status_code=status.HTTP_201_CREATED)
 async def create_group(group_data: CreateGroupRequest, db: Session = Depends(get_db)):
     try:
-        # Create a new group
-        new_group = Group(name=group_data.name)
+        # Create a new group with or without a password
+        new_group = Group(
+            name=group_data.name,
+            password=group_data.password if group_data.password else None
+        )
         db.add(new_group)
         db.flush()
         db.refresh(new_group)
@@ -150,7 +152,7 @@ async def create_group(group_data: CreateGroupRequest, db: Session = Depends(get
                 "group": {
                     "id": new_group.id,
                     "name": new_group.name,
-                    "created_at": new_group.created_at.isoformat() 
+                    "created_at": new_group.created_at.isoformat()
                 }
             },
             status_code=status.HTTP_201_CREATED
@@ -235,7 +237,8 @@ async def get_joined_groups(
                 "msg": recent_message if recent_message is not None else "Welcome to new group",
                 "online": True,
                 "unread": False,
-                "join_group": True  # Added field
+                "join_group": True,  # Added field
+                "is_password": group.password is not None  # New field
             })
 
         return JSONResponse(
@@ -252,7 +255,7 @@ async def get_joined_groups(
         traceback.print_exc()
         logging.error(f"Error fetching joined groups: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch joined groups")
-     
+ 
 @router.get("/groups/not-joined", status_code=status.HTTP_200_OK)
 async def get_not_joined_groups(
     user_uuid: str,
@@ -338,7 +341,6 @@ async def get_not_joined_groups(
         logging.error(f"Error fetching not joined groups: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch not joined groups")
 
-
 @router.post("/join-group", status_code=status.HTTP_200_OK)
 async def join_group(
     request: JoinGroupRequest, 
@@ -350,6 +352,10 @@ async def join_group(
         if not group:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
 
+        # If the group has a password, check if the provided password matches
+        if group.password and group.password != request.password:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password")
+
         # Add the user to the group
         new_member = GroupConversation(
             group_id=request.group_id,
@@ -359,30 +365,18 @@ async def join_group(
         db.add(new_member)
         db.commit()
 
-        # Fetch updated group details
-        group_details = db.query(Group).filter(Group.id == request.group_id).first()
-        if not group_details:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
-
-        member_count = db.query(GroupConversation).filter(GroupConversation.group_id == request.group_id).count()
-
-        return {
-            "group": {
-                "id": group_details.id,
-                "name": group_details.name,
-                "created_at": group_details.created_at.isoformat(),
-                "member_count": member_count
+        return JSONResponse(
+            content={
+                "message": "Joined group successfully",
+                "group_id": request.group_id
             },
-            "message": "Successfully joined the group"
-        }
+            status_code=status.HTTP_200_OK
+        )
 
-    except IntegrityError as e:
-        db.rollback()
-        logging.error(f"IntegrityError: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error adding user to group")
     except Exception as e:
         traceback.print_exc()
         logging.error(f"Error joining group: {e}")
+        db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to join group")
 
 

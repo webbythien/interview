@@ -40,6 +40,7 @@ class Group(Base):
     __tablename__ = 'groups'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     status = Column(Integer, nullable=False, default=1)

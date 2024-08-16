@@ -15,7 +15,8 @@ class CreateGroupRequest(ORJSONModel):
     name: str = Field(..., min_length=3, max_length=255, description="The name of the group")
     user_uuid: str = Field(..., min_length=36, max_length=36, description="The UUID of the user creating the group")
     username: str = Field(..., min_length=3, max_length=255, description="The username of the user creating the group")
-    
+    password: Optional[str] = Field(None, min_length=3, max_length=255, description="The password of the group (optional)")
+
     @validator('name')
     def validate_name(cls, value):
         if not re.match(r'^[\w\s-]+$', value):
