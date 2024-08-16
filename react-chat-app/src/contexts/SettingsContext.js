@@ -179,7 +179,7 @@ const SettingsProvider = ({ children }) => {
 
   const connectSocket = () => {
     const userId = localStorage.getItem("uuid");
-    const socket = io("https://prm-socket.webbythien.com");
+    const socket = io(process.env.REACT_APP_SOCKET_URL);
 
     socket.on("connect", () => {
       console.log("Connected to the Socket.io server", socket.id);
