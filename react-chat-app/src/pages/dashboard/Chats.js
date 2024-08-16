@@ -96,7 +96,7 @@ const Chats = () => {
 
   const getGroups = async () => {
     try {
-      setLoadingHistory(true);
+      // setLoadingHistory(true);
       const response = await axios.get(`${BASE_URL}${ENDPOINT}`, { params });
       console.log("Groups data:", response.data);
       if (response?.data && response.data?.groups?.length > 0) {

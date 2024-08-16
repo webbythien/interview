@@ -12,27 +12,28 @@ import {
 import useSettings from "../../hooks/useSettings";
 import { ClipLoader } from "react-spinners";
 const Message = ({ menu }) => {
-  const { chatHistory, loadingHistory,groupChat, groupChatMap } = useSettings();
+  const { chatHistory, loadingHistory, groupChat, groupChatMap } =
+    useSettings();
 
-  
-  useEffect(()=>{
-    console.log("groupChatMap: ", groupChatMap)
-  },[groupChatMap])
+  useEffect(() => {
+    console.log("groupChatMap: ", groupChatMap);
+  }, [groupChatMap]);
   return (
     <Box p={3}>
       <Stack spacing={3}>
         {loadingHistory ? (
-          <div style={{
-            justifyContent: 'center',
-            height: '100%',
-            display: 'flex',
-            width: '100%',
-            alignItems: 'center',
-          }}>
-             <ClipLoader  size={80} speedMultiplier={0.6}/>
+          <div
+            style={{
+              justifyContent: "center",
+              height: "100%",
+              display: "flex",
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <ClipLoader size={80} speedMultiplier={0.6} />
           </div>
-        ) : (
-          groupChatMap[groupChat?.id]?.length > 0 ?
+        ) : groupChatMap[groupChat?.id]?.length > 0 ? (
           groupChatMap[groupChat?.id].map((el) => {
             switch (el.type) {
               case "divider":
@@ -57,12 +58,12 @@ const Message = ({ menu }) => {
               default:
                 return <></>;
             }
-          }):
+          })
+        ) : groupChat.join_group ? (
           "No data"
-        )
-        
-        
-        }
+        ) : (
+          "No join group"
+        )}
       </Stack>
     </Box>
   );
