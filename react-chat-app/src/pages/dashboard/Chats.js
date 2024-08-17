@@ -45,7 +45,7 @@ function TabPanel(props) {
       id={`full-width-tabpanel-${index}`}
       aria-labelledby={`full-width-tab-${index}`}
       {...other}
-      style={{maxHeight:"64vh"}}
+      style={{ maxHeight: "64vh" }}
       className="scrollbar"
     >
       {value === index && (
@@ -176,7 +176,7 @@ const Chats = () => {
 
   const onFinish = async (values) => {
     try {
-      setLoadingNew(true)
+      setLoadingNew(true);
       const payload = {
         name: values.groupname,
         user_uuid: localStorage.getItem("uuid"),
@@ -206,8 +206,8 @@ const Chats = () => {
         "Error:",
         error.response ? error.response.data : error.message
       );
-    }finally{
-      setLoadingNew(false)
+    } finally {
+      setLoadingNew(false);
     }
   };
   const onFinishFailed = (errorInfo) => {
@@ -276,7 +276,6 @@ const Chats = () => {
               }
               disabled={!usePassword}
             />
-            <p style={{marginTop:"8px", color:"red"}}>Tick password if you want to set password for your room !</p>
           </Form.Item>
 
           <Form.Item
@@ -362,7 +361,7 @@ const Chats = () => {
                     <Typography variant="subtitle2" sx={{ color: "#676767" }}>
                       All Groups Joined
                     </Typography>
-                    {chatList.length > 0 ?
+                    {chatList.length > 0 ? (
                       chatList.map((el) => {
                         return (
                           <ChatElement
@@ -371,23 +370,29 @@ const Chats = () => {
                             {...el}
                           />
                         );
-                      }):(
-                        <div style={{ display: "flex", justifyContent:"center", alignItems:"center",gap:"16px" }}>
-                          <div style={{width:"32%"}}>
-                            <img
-                            style={{width:"100%", height:"100%"}}
-                              src="https://cdn.icon-icons.com/icons2/3179/PNG/512/team_people_man_woman_group_icon_193969.png"
-                              alt="No Group"
-                            />
-                          </div>
-                          No group yet
+                      })
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          gap: "16px",
+                        }}
+                      >
+                        <div style={{ width: "32%" }}>
+                          <img
+                            style={{ width: "100%", height: "100%" }}
+                            src="https://cdn.icon-icons.com/icons2/3179/PNG/512/team_people_man_woman_group_icon_193969.png"
+                            alt="No Group"
+                          />
                         </div>
-                      )
-                    
-                    }
+                        No group yet
+                      </div>
+                    )}
                   </Stack>
                 </TabPanel>
-                <TabPanel  value={value} index={1}>
+                <TabPanel value={value} index={1}>
                   <Stack spacing={2.4}>
                     <Typography variant="subtitle2" sx={{ color: "#676767" }}>
                       All Groups Unjoined
@@ -403,10 +408,17 @@ const Chats = () => {
                         );
                       })
                     ) : (
-                      <div style={{ display: "flex", justifyContent:"center", alignItems:"center",gap:"16px" }}>
-                        <div style={{width:"32%"}}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          gap: "16px",
+                        }}
+                      >
+                        <div style={{ width: "32%" }}>
                           <img
-                          style={{width:"100%", height:"100%"}}
+                            style={{ width: "100%", height: "100%" }}
                             src="https://cdn.icon-icons.com/icons2/3179/PNG/512/team_people_man_woman_group_icon_193969.png"
                             alt="No Group"
                           />
