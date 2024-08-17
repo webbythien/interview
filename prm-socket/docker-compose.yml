@@ -1,0 +1,29 @@
+version: '3'
+services:
+  rcon:
+    image: adminesollab/dev-repository:lido-websocket-dev-latest
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile.rcon
+    volumes:
+      - ./app:/app/app
+      - ./keys:/app/keys
+      - ./plugins:/app/plugins
+      - ./config:/app/config
+    ports:
+      - 5500:5000
+    tty: true
+
+
+      #  nginx:
+      #build:
+      #context: .
+      #dockerfile: Dockerfile.nginx
+      #volumes:
+      #- .:/app
+      #ports:
+      #- "8500:443"
+      #depends_on:
+      #- "rcon"

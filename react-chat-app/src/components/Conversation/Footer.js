@@ -153,7 +153,7 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter })
   );
 };
 
-const Footer = () => {
+const Footer = ({scrollToBottom}) => {
   const theme = useTheme();
   const { groupChat, setChatHistory, setGroupChatMap } = useSettings();
   const [message, setMessage] = useState("");
@@ -283,6 +283,9 @@ const Footer = () => {
     } catch (error) {
       console.error("Error sending message", error);
     }
+    // finally{
+      // scrollToBottom()
+    // }
 
     // Reset the file list and message input after sending
     setFileList([]);

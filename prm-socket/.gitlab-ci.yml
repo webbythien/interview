@@ -1,0 +1,52 @@
+variables:
+  REGISTRY_ADDRESS: adminesollab/dev-repository
+  DOCKER_REGISTRY_USER: adminesollab
+  DOCKER_REGISTRY_TOKEN: dckr_pat_GkbSzsSj96ab1jsridnQtDrwUb0
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  script:
+    # authentication gitlab in registry (dockerhub)
+    - docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_TOKEN}
+    
+    # build image from Dockerfile, tags should be <your-project-name>-<short-commit>
+    - docker build -f Dockerfile.rcon . -t ${REGISTRY_ADDRESS}:lido-websocket-dev-${CI_COMMIT_SHORT_SHA}
+
+    # tag new image with <your-project-name>-latest
+    - docker tag ${REGISTRY_ADDRESS}:lido-websocket-dev-${CI_COMMIT_SHORT_SHA} ${REGISTRY_ADDRESS}:lido-websocket-dev-latest
+    
+    # push both of the images to registry
+    - docker push ${REGISTRY_ADDRESS}:lido-websocket-dev-${CI_COMMIT_SHORT_SHA}
+    - docker push ${REGISTRY_ADDRESS}:lido-websocket-dev-latest
+  only:
+    refs:
+      # branch of the repo
+      - stag
+  tags:
+    # choose runner
+    - build
+    - lido
+    - microservice
+    - dev
+
+
+deploy:
+  stage: deploy
+  script:
+    - cp /home/gitlab-runner/ENV/websocket/.env .
+    - docker login -u adminesollab -p ${DOCKER_REGISTRY_TOKEN}
+    - docker pull ${REGISTRY_ADDRESS}:lido-websocket-dev-latest && \
+    - docker compose down && \
+    - docker compose up -d
+  only:
+    refs:
+      - stag
+  tags:
+    - deploy
+    - lido
+    - microservice
+    - dev

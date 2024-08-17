@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - '5672:5672'  # AMQP
+      - '15672:15672' # rabbitmq management UI
+    restart: always
+    environment:
+      - TZ=Asia/Ho_Chi_Minh  
+      - RABBITMQ_DEFAULT_USER=root
+      - RABBITMQ_DEFAULT_PASS=JWFxI45LaoZ9Ga7AJ3Ahdd2r
+    networks:
+      - database-bridge
+networks:
+  database-bridge:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+    driver: local

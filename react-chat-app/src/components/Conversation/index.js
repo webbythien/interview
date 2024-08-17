@@ -103,11 +103,11 @@ const Conversation = () => {
     if (isAtBottom) {
       scrollToBottom();
     }
-  }, [chatHistory, loadingHistory]);
+  }, [chatHistory, loadingHistory, groupChatMap]);
 
   return (
     <Stack height={"100%"} maxHeight={"100vh"} width={"auto"}>
-      {!groupChat?.join_group && groupChat?.is_password ? (
+      {!groupChat?.join_group  ? (
         <div
           style={{
             display: "flex",
@@ -118,8 +118,8 @@ const Conversation = () => {
             flexDirection:"column"
           }}
         >
-          <Typography.Title level={2} type="danger" >This is secret group</Typography.Title>
-          <Typography.Title level={3} type="secondary" >Join group to see messages</Typography.Title>
+          <Typography.Title level={2} type="danger" >This is {groupChat?.is_password?"secret":"public"} group</Typography.Title>
+          <Typography.Title level={3} type="secondary" >Please {groupChat?.is_password&&"input password to"} join group to see messages</Typography.Title>
         </div>
       ) : (
         <>
@@ -150,7 +150,7 @@ const Conversation = () => {
             <Message menu={true} />
           </Box>
           {groupChat?.join_group ? (
-            <Footer />
+            <Footer scrollToBottom={scrollToBottom} />
           ) : (
             <div
               style={{
