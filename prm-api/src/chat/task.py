@@ -104,7 +104,8 @@ async def send_message_task(
     sender_uuid: str, 
     message: str = None, 
     files: List[dict] = None,
-    task_id: str = None
+    task_id: str = None,
+    sender_name:str="",
 ):
     try:
         db = session()
@@ -112,7 +113,8 @@ async def send_message_task(
         file_urls = []
         img_urls = []
         doc_data = {}
-
+        print("sender_name: ",sender_name)
+        print("sender_uuid: ",sender_uuid)
         # Create a new conversation record
         new_conversation = Conversation(
             sender_uuid=sender_uuid,
@@ -170,13 +172,15 @@ async def send_message_task(
             "receiver_id":receiver_id,
             "type": "msg",
             "message": message,
-            "uuid": sender_uuid,
+            "sender_uuid": sender_uuid,
+            "sender_name": sender_name,
             "id": new_conversation.id,
             "created_at": new_conversation.created_at.isoformat(),
             "subtype": subtype,
             "task_id": task_id,
             "sent": 2
         }
+        print("new_message_data: ",new_message_data)
         
         # Add subtype-specific fields
         if subtype == 'img':

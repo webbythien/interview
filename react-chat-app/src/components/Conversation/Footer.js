@@ -277,6 +277,7 @@ const Footer = ({scrollToBottom}) => {
     const data = {
       sender_uuid: localStorage.getItem("uuid"),
       receiver_id: groupChat.id,
+      sender_name :localStorage.getItem("username"),
       message: messageTemp,
       files: [],
     };
@@ -313,6 +314,8 @@ const Footer = ({scrollToBottom}) => {
         created_at: new Date().toISOString(),
         subtype: fileList.length > 0 ? "img" : null,
         img: uploadedUrls.map((file) => file.url),
+        sender_name: localStorage.getItem("username"),
+        sender_uuid: localStorage.getItem("uuid"),
       };
 
       // setChatHistory((prevChatHistory) => [...prevChatHistory, temp]);

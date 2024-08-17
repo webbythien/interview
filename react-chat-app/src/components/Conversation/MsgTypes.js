@@ -18,7 +18,7 @@ import { Image } from "antd";
 
 const getIncomingStatus = (el) => {
   const localUuid = localStorage.getItem("uuid");
-  const uuid = el.uuid + "";
+  const uuid = el.sender_uuid + "";
   return uuid !== localUuid + "";
 };
 
@@ -29,7 +29,11 @@ const DocMsg = ({ el, menu }) => {
   return (
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
-        {incoming && <Avatar>N</Avatar>}
+        {incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         <Box
           p={1.5}
           sx={{
@@ -72,7 +76,11 @@ const DocMsg = ({ el, menu }) => {
             </Typography>
           </Stack>
         </Box>
-        {!incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+        {!incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         {menu && <MessageOptions />}
       </Stack>
       <Stack
@@ -132,7 +140,11 @@ const LinkMsg = ({ el, menu }) => {
   return (
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
-        {incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+        {incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         <Box
           p={1.5}
           sx={{
@@ -188,7 +200,11 @@ const LinkMsg = ({ el, menu }) => {
             </Stack>
           </Stack>
         </Box>
-        {!incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+        {!incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         {menu && <MessageOptions />}
       </Stack>
       <Stack
@@ -219,7 +235,11 @@ const ReplyMsg = ({ el, menu }) => {
   const incoming = getIncomingStatus(el);
   return (
     <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
-      {incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+      {incoming && (
+        <Avatar sx={{ bgcolor: deepOrange[500] }}>
+          {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+        </Avatar>
+      )}
       <Box
         p={1.5}
         sx={{
@@ -253,7 +273,11 @@ const ReplyMsg = ({ el, menu }) => {
           </Typography>
         </Stack>
       </Box>
-      {!incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+      {!incoming && (
+        <Avatar sx={{ bgcolor: deepOrange[500] }}>
+          {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+        </Avatar>
+      )}
       {menu && <MessageOptions />}
     </Stack>
   );
@@ -266,7 +290,11 @@ const MediaMsg = ({ el, menu }) => {
   return (
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
-        {incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+        {incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         <Box
           p={1.5}
           sx={{
@@ -305,7 +333,11 @@ const MediaMsg = ({ el, menu }) => {
             </Typography>
           </Stack>
         </Box>
-        {!incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+        {!incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         {menu && <MessageOptions />}
       </Stack>
       {el.uuid === localStorage.getItem("uuid") && (
@@ -339,7 +371,11 @@ const TextMsg = ({ el, menu }) => {
   return (
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
-        {incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+        {incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         <Box
           p={1.5}
           sx={{
@@ -357,7 +393,11 @@ const TextMsg = ({ el, menu }) => {
             {el.message}
           </Typography>
         </Box>
-        {!incoming && <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>}
+        {!incoming && (
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>
+            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
+          </Avatar>
+        )}
         {menu && <MessageOptions />}
       </Stack>
       <Stack

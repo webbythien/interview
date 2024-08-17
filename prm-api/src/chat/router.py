@@ -406,7 +406,9 @@ async def create_conversation(request: SendMessageRequest):
                 "sender_uuid": request.sender_uuid, 
                 "message": request.message,
                 "files": files_dict,
-                "task_id": task_id
+                "task_id": task_id,
+                "sender_name": request.sender_name, 
+
             }
         )
 
@@ -489,13 +491,18 @@ async def get_group_messages(
 
 def format_message(message, db):
     """Format a single message record."""
+    # Fetch the sender details based on sender_uuid
+    sender = db.query(GroupConversation).filter(GroupConversation.user_uuid == message.sender_uuid).first()
+
     message_data = {
         "type": "msg",
         "id": message.id,
         "message": message.message,
         "sent": 2,
         "uuid": message.sender_uuid,
-        "created_at": message.created_at.isoformat()  # Format datetime to string
+        "created_at": message.created_at.isoformat(),  # Format datetime to string
+        "sender_name": sender.username if sender else None,  # Add sender name if available
+        "sender_uuid": sender.user_uuid if sender else None,  # Add sender UUID if available
     }
     
     if message.subtype:
