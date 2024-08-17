@@ -276,6 +276,7 @@ const Chats = () => {
               }
               disabled={!usePassword}
             />
+            <p style={{marginTop:"8px", color:"red"}}>Tick password if you want to set password for your room !</p>
           </Form.Item>
 
           <Form.Item
