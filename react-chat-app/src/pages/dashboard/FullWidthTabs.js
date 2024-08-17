@@ -65,7 +65,7 @@ export default function FullWidthTabs() {
           aria-label="full width tabs example"
         >
           <Tab label="Groups Joined" {...a11yProps(0)} />
-          <Tab label="Groups Not Joined:" {...a11yProps(1)} />
+          <Tab label="Groups Unjoined:" {...a11yProps(1)} />
         </Tabs>
       </AppBar>
       <SwipeableViews

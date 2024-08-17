@@ -24,6 +24,7 @@ const ChatElement = ({
   setValue,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingJoin, setLoadingJoin] = useState(false);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -85,6 +86,7 @@ const ChatElement = ({
 
   const handleJoinGroup = async (password = null) => {
     try {
+      setLoadingJoin(true)
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/v1/api/chat/join-group`,
         {
@@ -134,6 +136,9 @@ const ChatElement = ({
     } catch (error) {
       toast.error("Wrong password");
       console.error("Error joining group:", error);
+    }finally{
+      setLoadingJoin(false)
+
     }
   };
 
@@ -213,7 +218,10 @@ const ChatElement = ({
               span: 16,
             }}
           >
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit"
+            loading={loadingJoin}
+            
+            >
               Submit
             </Button>
           </Form.Item>
@@ -270,6 +278,7 @@ const ChatElement = ({
                   onClick={() => {
                     is_password ? showModal() : handleJoinGroup();
                   }}
+                  loading={true}
                 >
                   Join Group
                 </Button>

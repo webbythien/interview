@@ -45,9 +45,11 @@ function TabPanel(props) {
       id={`full-width-tabpanel-${index}`}
       aria-labelledby={`full-width-tab-${index}`}
       {...other}
+      style={{maxHeight:"64vh"}}
+      className="scrollbar"
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 1 }}>
           <Typography>{children}</Typography>
         </Box>
       )}
@@ -84,6 +86,7 @@ const Chats = () => {
   const theme = useTheme();
 
   const [value, setValue] = React.useState(1);
+  const [loadingNew, setLoadingNew] = React.useState(1);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -173,28 +176,38 @@ const Chats = () => {
 
   const onFinish = async (values) => {
     try {
+      setLoadingNew(true)
       const payload = {
         name: values.groupname,
         user_uuid: localStorage.getItem("uuid"),
         username: localStorage.getItem("username"),
         password: usePassword ? values.password : null,
       };
-      
-      console.log('Sending payload:', payload);  // For debugging
-  
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/v1/api/chat/groups`, payload, {
-        headers: {
-          'accept': 'application/json',
-          'Content-Type': 'application/json',
+
+      console.log("Sending payload:", payload); // For debugging
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/v1/api/chat/groups`,
+        payload,
+        {
+          headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+          },
         }
-      });
-  
-      console.log('Response:', response.data);
-      setIsModalOpen(false)
-      handleCancel();  // Close the modal
-      getGroups();  // Refresh the groups list
+      );
+
+      console.log("Response:", response.data);
+      setIsModalOpen(false);
+      handleCancel(); // Close the modal
+      getGroups(); // Refresh the groups list
     } catch (error) {
-      console.error('Error:', error.response ? error.response.data : error.message);
+      console.error(
+        "Error:",
+        error.response ? error.response.data : error.message
+      );
+    }finally{
+      setLoadingNew(false)
     }
   };
   const onFinishFailed = (errorInfo) => {
@@ -271,12 +284,11 @@ const Chats = () => {
               span: 16,
             }}
           >
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={loadingNew}>
               Submit
             </Button>
           </Form.Item>
         </Form>
-        
       </Modal>
 
       <Box
@@ -336,7 +348,7 @@ const Chats = () => {
                   sx={{ background: "#F4DEB3", padding: "8px" }}
                 >
                   <Tab label="Groups Joined" {...a11yProps(0)} />
-                  <Tab label="Groups Not Joined" {...a11yProps(1)} />
+                  <Tab label="Groups Unjoined" {...a11yProps(1)} />
                 </Tabs>
               </AppBar>
               <SwipeableViews
@@ -347,9 +359,9 @@ const Chats = () => {
                 <TabPanel value={value} index={0}>
                   <Stack spacing={2.4}>
                     <Typography variant="subtitle2" sx={{ color: "#676767" }}>
-                      All Chats
+                      All Groups Joined
                     </Typography>
-                    {chatList.length > 0 &&
+                    {chatList.length > 0 ?
                       chatList.map((el) => {
                         return (
                           <ChatElement
@@ -358,15 +370,28 @@ const Chats = () => {
                             {...el}
                           />
                         );
-                      })}
+                      }):(
+                        <div style={{ display: "flex", justifyContent:"center", alignItems:"center",gap:"16px" }}>
+                          <div style={{width:"32%"}}>
+                            <img
+                            style={{width:"100%", height:"100%"}}
+                              src="https://cdn.icon-icons.com/icons2/3179/PNG/512/team_people_man_woman_group_icon_193969.png"
+                              alt="No Group"
+                            />
+                          </div>
+                          No group yet
+                        </div>
+                      )
+                    
+                    }
                   </Stack>
                 </TabPanel>
-                <TabPanel value={value} index={1}>
+                <TabPanel  value={value} index={1}>
                   <Stack spacing={2.4}>
                     <Typography variant="subtitle2" sx={{ color: "#676767" }}>
-                      All Chats
+                      All Groups Unjoined
                     </Typography>
-                    {chatListUnjoin.length > 0 &&
+                    {chatListUnjoin.length > 0 ? (
                       chatListUnjoin.map((el) => {
                         return (
                           <ChatElement
@@ -375,7 +400,19 @@ const Chats = () => {
                             {...el}
                           />
                         );
-                      })}
+                      })
+                    ) : (
+                      <div style={{ display: "flex", justifyContent:"center", alignItems:"center",gap:"16px" }}>
+                        <div style={{width:"32%"}}>
+                          <img
+                          style={{width:"100%", height:"100%"}}
+                            src="https://cdn.icon-icons.com/icons2/3179/PNG/512/team_people_man_woman_group_icon_193969.png"
+                            alt="No Group"
+                          />
+                        </div>
+                        No group yet
+                      </div>
+                    )}
                   </Stack>
                 </TabPanel>
               </SwipeableViews>

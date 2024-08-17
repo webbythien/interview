@@ -60,7 +60,9 @@ const Message = ({ menu }) => {
             }
           })
         ) : 
-          "No data"
+         <div style={{display:"flex", justifyContent:"center", alignItems:"center", height:"100%", width:"100%"}}>
+            Welcome to the chat channel
+         </div>
         }
       </Stack>
     </Box>

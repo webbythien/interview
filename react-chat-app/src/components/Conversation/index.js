@@ -12,16 +12,16 @@ import { Typography } from "antd";
 const Conversation = () => {
   const theme = useTheme();
   const boxRef = useRef(null);
-  
+
   const {
     chatHistory,
     loadingHistory,
     groupChat,
     groupChatMap,
     setGroupChatMap,
-    boxChatRef
+    boxChatRef,
   } = useSettings();
-  
+
   const setRefs = (element) => {
     boxRef.current = element;
     boxChatRef.current = element;
@@ -114,19 +114,32 @@ const Conversation = () => {
 
   return (
     <Stack height={"100%"} maxHeight={"100vh"} width={"auto"}>
-      {!groupChat?.join_group  ? (
+      {!groupChat?.join_group ? (
         <div
           style={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            width:"100%",
-            height:"100%",
-            flexDirection:"column"
+            width: "100%",
+            height: "100%",
+            flexDirection: "column",
           }}
         >
-          <Typography.Title level={2} type="danger" >This is {groupChat?.is_password?"secret":"public"} group</Typography.Title>
-          <Typography.Title level={3} type="secondary" >Please {groupChat?.is_password&&"input password to"} join group to see messages</Typography.Title>
+          {groupChat?.id ? (
+            <>
+              <Typography.Title level={2} type="danger">
+                This is {groupChat?.is_password ? "secret" : "public"} group
+              </Typography.Title>
+              <Typography.Title level={3} type="secondary">
+                Please {groupChat?.is_password && "input password to"} join
+                group to see messages
+              </Typography.Title>
+            </>
+          ) : (
+            <Typography.Title level={2} type="danger">
+              No chat here
+            </Typography.Title>
+          )}
         </div>
       ) : (
         <>
