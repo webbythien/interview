@@ -13,10 +13,38 @@ import { useTheme } from "@mui/material/styles";
 import { DotsThreeVertical, DownloadSimple } from "phosphor-react";
 import React, { useEffect, useState } from "react";
 import { Message_options } from "../../data";
-import { Image } from "antd";
-import { blue, green, purple, red, orange, pink, cyan, teal, indigo, deepPurple, lightBlue, lime, amber, deepOrange } from '@mui/material/colors';
+import { Image, Tooltip } from "antd";
+import {
+  blue,
+  green,
+  purple,
+  red,
+  orange,
+  pink,
+  cyan,
+  teal,
+  indigo,
+  deepPurple,
+  lightBlue,
+  lime,
+  amber,
+  deepOrange,
+} from "@mui/material/colors";
 const colorOptions = [
-  blue, green, purple, red, orange, pink, cyan, teal, indigo, deepPurple, lightBlue, lime, amber, deepOrange
+  blue,
+  green,
+  purple,
+  red,
+  orange,
+  pink,
+  cyan,
+  teal,
+  indigo,
+  deepPurple,
+  lightBlue,
+  lime,
+  amber,
+  deepOrange,
 ];
 
 const shades = [300, 400, 500, 600, 700];
@@ -28,19 +56,19 @@ const getIncomingStatus = (el) => {
 };
 function getColorFromUUID(uuid) {
   if (!uuid) {
-    return { backgroundColor: blue[500], color: '#fff' };
+    return { backgroundColor: blue[500], color: "#fff" };
   }
 
-  const sum = uuid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
+  const sum = uuid.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
   const colorIndex = sum % colorOptions.length;
-  
+
   const shadeIndex = uuid.charCodeAt(0) % shades.length;
-  
+
   const backgroundColor = colorOptions[colorIndex][shades[shadeIndex]];
-  
+
   const color = calculateContrastColor(backgroundColor);
-  
+
   return { backgroundColor, color };
 }
 
@@ -49,19 +77,21 @@ function calculateContrastColor(hexColor) {
   const r = parseInt(hexColor.slice(1, 3), 16);
   const g = parseInt(hexColor.slice(3, 5), 16);
   const b = parseInt(hexColor.slice(5, 7), 16);
-  
+
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  
-  return brightness > 128 ? '#000000' : '#ffffff';
+
+  return brightness > 128 ? "#000000" : "#ffffff";
 }
 
 const AvatarCustom = ({ uuid, name }) => {
   const { backgroundColor, color } = getColorFromUUID(uuid);
-  
+
   return (
-    <Avatar sx={{ bgcolor: backgroundColor, color: color }}>
-      {name ? name[0].toUpperCase() : "O"}
-    </Avatar>
+    <Tooltip placement="top" title={name||"User not found"}>
+      <Avatar sx={{ bgcolor: backgroundColor, color: color }}>
+        {name ? name[0].toUpperCase() : "O"}
+      </Avatar>
+    </Tooltip>
   );
 };
 
@@ -270,10 +300,7 @@ const ReplyMsg = ({ el, menu }) => {
   const incoming = getIncomingStatus(el);
   return (
     <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
-      {incoming && (
-          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
-        
-      )}
+      {incoming && <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />}
       <Box
         p={1.5}
         sx={{
@@ -308,8 +335,7 @@ const ReplyMsg = ({ el, menu }) => {
         </Stack>
       </Box>
       {!incoming && (
-          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
-        
+        <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
       )}
       {menu && <MessageOptions />}
     </Stack>

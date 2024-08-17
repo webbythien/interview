@@ -4,7 +4,7 @@ import StyledBadge from "./StyledBadge";
 import useSettings from "../hooks/useSettings";
 import axios from "axios";
 import { useState } from "react";
-import { Form, Input, Modal } from "antd";
+import { Form, Input, Modal, Tooltip } from "antd";
 import toast, { Toaster } from "react-hot-toast";
 
 //single chat element
@@ -239,6 +239,7 @@ const ChatElement = ({
         }}
         p={2}
       >
+        <Tooltip placement="top" title={`Group ID: ${id}`}>
         <Stack
           direction="row"
           alignItems="center"
@@ -258,7 +259,7 @@ const ChatElement = ({
             )}
 
             <Stack spacing={0.3}>
-              <Typography variant="subtitle2">{name}</Typography>
+              <Typography variant="subtitle2">{truncateMessage(name,16)}</Typography>
               {join_group ? (
                 <Typography variant="caption">
                   {truncateMessage(
@@ -291,6 +292,8 @@ const ChatElement = ({
             <Badge color="primary" badgeContent={unreadMap[id] || 0}></Badge>
           </Stack>
         </Stack>
+        </Tooltip>
+
       </Box>
     </>
   );
