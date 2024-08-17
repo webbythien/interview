@@ -269,11 +269,15 @@ const Footer = ({scrollToBottom}) => {
     if (fileList.length <= 0 && (message === "" || message === null)) {
       return;
     }
+    const messageTemp = message
+
+    setMessage("");
+
     let uploadedUrls = [];
     const data = {
       sender_uuid: localStorage.getItem("uuid"),
       receiver_id: groupChat.id,
-      message: message,
+      message: messageTemp,
       files: [],
     };
 
@@ -302,7 +306,7 @@ const Footer = ({scrollToBottom}) => {
 
       const temp = {
         type: "msg",
-        message: message,
+        message: messageTemp,
         sent: 1,
         id: responseData.task_id,
         uuid: localStorage.getItem("uuid"),
@@ -319,13 +323,8 @@ const Footer = ({scrollToBottom}) => {
     } catch (error) {
       console.error("Error sending message", error);
     }
-    // finally{
-      // scrollToBottom()
-    // }
-
-    // Reset the file list and message input after sending
+   
     setFileList([]);
-    setMessage("");
   };
 
   const uploadButton = (

@@ -12,13 +12,20 @@ import { Typography } from "antd";
 const Conversation = () => {
   const theme = useTheme();
   const boxRef = useRef(null);
+  
   const {
     chatHistory,
     loadingHistory,
     groupChat,
     groupChatMap,
     setGroupChatMap,
+    boxChatRef
   } = useSettings();
+  
+  const setRefs = (element) => {
+    boxRef.current = element;
+    boxChatRef.current = element;
+  };
 
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -125,7 +132,7 @@ const Conversation = () => {
         <>
           <Header />
           <Box
-            ref={boxRef}
+            ref={setRefs}
             className="scrollbar"
             width={"100%"}
             sx={{

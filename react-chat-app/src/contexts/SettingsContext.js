@@ -1,5 +1,5 @@
 // provider === component
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import { defaultSettings } from "../config";
 import useLocalStorage from "../hooks/useLocalStorage";
 import getColorPresets, {
@@ -321,6 +321,8 @@ const SettingsProvider = ({ children }) => {
     fetchMessages(groupChat?.id);
   }, [groupChat]);
 
+  const boxChatRef = useRef(null);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -368,7 +370,8 @@ const SettingsProvider = ({ children }) => {
         setChatList,
         chatList,
         setChatListUnjoin,
-        chatListUnjoin
+        chatListUnjoin,
+        boxChatRef
       }}
     >
       {children}

@@ -5,6 +5,7 @@ import useSettings from "../hooks/useSettings";
 import axios from "axios";
 import { useState } from "react";
 import { Form, Input, Modal } from "antd";
+import toast, { Toaster } from "react-hot-toast";
 
 //single chat element
 const ChatElement = ({
@@ -45,6 +46,7 @@ const ChatElement = ({
     setUnreadMap,
     setChatList,
     setChatListUnjoin,
+    boxChatRef
   } = useSettings();
 
   const handleSetGroupChat = () => {
@@ -52,7 +54,7 @@ const ChatElement = ({
       // if (!join_group){
       //   return
       // }
-
+      
       if (groupChat.id !== id) {
         setLoadingHistory(true);
         setGroupChat({
@@ -89,7 +91,7 @@ const ChatElement = ({
           uuid: localStorage.getItem("uuid"),
           username: localStorage.getItem("username"),
           group_id: id,
-          password:password,
+          password: password,
         }
       );
       console.log("join group", response.data.group);
@@ -112,6 +114,7 @@ const ChatElement = ({
 
         return prevUnjoinList;
       });
+      toast.success("Join group successfully");
       setValue(0);
       setGroupChat({
         id,
@@ -127,7 +130,9 @@ const ChatElement = ({
         join_group: true,
         is_password,
       });
+      setIsModalOpen(false);
     } catch (error) {
+      toast.error("Wrong password");
       console.error("Error joining group:", error);
     }
   };
@@ -141,16 +146,22 @@ const ChatElement = ({
   };
 
   const onFinish = async (values) => {
-    await handleJoinGroup(values.password)
-    setIsModalOpen(false)
+    await handleJoinGroup(values.password);
     console.log("Success:", values);
   };
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
+  const handleDoubleClick = () => {
+    if (boxChatRef.current) {
+      boxChatRef.current.scrollTop = boxChatRef.current.scrollHeight;
+    }
+  };
 
   return (
     <>
+      <Toaster position="top-center"/>
+
       <Modal
         title="Join group"
         open={isModalOpen}
@@ -163,6 +174,8 @@ const ChatElement = ({
         }}
         footer={null}
       >
+      <Toaster position="top-center"/>
+
         <Form
           name="basic"
           labelCol={{
@@ -209,6 +222,7 @@ const ChatElement = ({
 
       <Box
         onClick={handleSetGroupChat}
+        onDoubleClick={handleDoubleClick}
         sx={{
           width: "100%",
           borderRadius: 1,
