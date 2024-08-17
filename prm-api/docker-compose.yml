@@ -15,18 +15,6 @@ services:
     ports:
       - "8881:8000"
     command: ./scripts/start-dev.sh
-  scan:
-    image: scan-product-payment
-    container_name: scan-product-payment
-    env_file:
-      - .env
-    build:
-      context: .
-      dockerfile: Dockerfile.scan
-    restart: always
-    environment:
-      - TZ=Asia/Ho_Chi_Minh
-    command: python src/scan.py
   worker:
     image: worker-message-prm
     container_name: worker-message-prm
