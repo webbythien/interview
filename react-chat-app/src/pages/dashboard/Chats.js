@@ -190,6 +190,7 @@ const Chats = () => {
       });
   
       console.log('Response:', response.data);
+      setIsModalOpen(false)
       handleCancel();  // Close the modal
       getGroups();  // Refresh the groups list
     } catch (error) {
