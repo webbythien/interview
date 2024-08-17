@@ -12,7 +12,12 @@ const Header = () => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const { groupChat, setGroupChat } = useSettings();
-
+  const truncateMessage = (msg, charLimit) => {
+    if (msg.length > charLimit) {
+      return msg.slice(0, charLimit) + "...";
+    }
+    return msg;
+  };
   return (
     <Box p={2} sx={{ width:'100%', backgroundColor: theme.palette.mode === 'light' ? '#F8FAFF' : theme.palette.background.paper, boxShadow:'0px 0px 2px rgba(0,0,0,0.25)'}}>
     <Stack alignItems={'center'} direction='row' justifyContent={'space-between'}
@@ -41,7 +46,7 @@ const Header = () => {
             </Box>
             <Stack spacing={0.2}>
                     <Typography variant='subtitle2'>
-                        {groupChat?.name || "No name"}
+                        {groupChat?.name ? truncateMessage(groupChat?.name, 100) : "No name"}
                     </Typography>
                     <Typography variant='caption'>
                         Online
