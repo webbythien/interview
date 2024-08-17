@@ -264,17 +264,6 @@ const Chats = () => {
             />
           </Form.Item>
 
-          {/* <Form.Item
-            name="remember"
-            valuePropName="checked"
-            wrapperCol={{
-              offset: 8,
-              span: 16,
-            }}
-          >
-            <Checkbox style={{color:"black"}}>Use password</Checkbox>
-          </Form.Item> */}
-
           <Form.Item
             wrapperCol={{
               offset: 8,
@@ -286,16 +275,7 @@ const Chats = () => {
             </Button>
           </Form.Item>
         </Form>
-        {/* <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Checkbox onChange={handleChangeCheckBox}>Checkbox</Checkbox>
-          <Input.OTP mask="🔒" onChange={handlePassword} />
-        </div> */}
+        
       </Modal>
 
       <Box

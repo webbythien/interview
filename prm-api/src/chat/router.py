@@ -323,7 +323,9 @@ async def get_not_joined_groups(
                 "msg": recent_message if recent_message is not None else "Welcome to new group",
                 "online": True,
                 "unread": False,
-                "join_group": False  # Added field
+                "join_group": False,  # Added field
+                "is_password": group.password is not None  # New field
+
             })
 
         return JSONResponse(
@@ -348,7 +350,7 @@ async def join_group(
 ):
     try:
         # Check if the group exists
-        group = db.query(Group).filter(Group.id == request.group_id).first()
+        group : Group = db.query(Group).filter(Group.id == request.group_id).first()
         if not group:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
 
@@ -363,15 +365,24 @@ async def join_group(
             username=request.username
         )
         db.add(new_member)
-        db.commit()
+        db.flush()
 
-        return JSONResponse(
-            content={
-                "message": "Joined group successfully",
-                "group_id": request.group_id
+        group_details : Group = db.query(Group).filter(Group.id == request.group_id).first()
+        if not group_details:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+
+        member_count = db.query(GroupConversation).filter(GroupConversation.group_id == request.group_id).count()
+
+        db.commit()
+        return {
+            "group": {
+                "id": group_details.id,
+                "name": group_details.name,
+                "created_at": group_details.created_at.isoformat(),
+                "member_count": member_count
             },
-            status_code=status.HTTP_200_OK
-        )
+            "message": "Successfully joined the group"
+        }
 
     except Exception as e:
         traceback.print_exc()

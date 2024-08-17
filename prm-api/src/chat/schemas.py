@@ -40,6 +40,7 @@ class JoinGroupRequest(ORJSONModel):
     uuid: str
     username: str
     group_id: int
+    password: Optional[str] = None
 
 
 class UploadedFileInfo(ORJSONModel):

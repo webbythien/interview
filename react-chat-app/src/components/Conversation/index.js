@@ -7,12 +7,19 @@ import Message from "./Message";
 import useSettings from "../../hooks/useSettings";
 import axios from "axios";
 import { ClipLoader } from "react-spinners";
+import { Typography } from "antd";
 
 const Conversation = () => {
   const theme = useTheme();
   const boxRef = useRef(null);
-  const { chatHistory, loadingHistory, groupChat, groupChatMap, setGroupChatMap } = useSettings();
-  
+  const {
+    chatHistory,
+    loadingHistory,
+    groupChat,
+    groupChatMap,
+    setGroupChatMap,
+  } = useSettings();
+
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -29,27 +36,31 @@ const Conversation = () => {
     setIsFetching(true);
     const oldScrollHeight = boxRef.current.scrollHeight;
     const oldScrollTop = boxRef.current.scrollTop;
-    
+
     try {
       const groupChatMapData = groupChatMap[groupChat.id] || [];
       const startID = groupChatMapData[0]?.id;
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/v1/api/chat/groups/${groupChat.id}/messages?limit=20&offset=0&start_id=${startID}`
       );
-      
+
       const newMessages = response.data.messages;
-      
-      if (newMessages.length > 0 && newMessages[0].id !== groupChatMapData[0]?.id) {
+
+      if (
+        newMessages.length > 0 &&
+        newMessages[0].id !== groupChatMapData[0]?.id
+      ) {
         setGroupChatMap((prev) => ({
           ...prev,
           [groupChat.id]: [...newMessages, ...groupChatMapData],
         }));
-        
+
         // Maintain scroll position after new messages are added
         setTimeout(() => {
           if (boxRef.current) {
             const newScrollHeight = boxRef.current.scrollHeight;
-            boxRef.current.scrollTop = newScrollHeight - oldScrollHeight + oldScrollTop;
+            boxRef.current.scrollTop =
+              newScrollHeight - oldScrollHeight + oldScrollTop;
           }
         }, 0);
       }
@@ -96,32 +107,62 @@ const Conversation = () => {
 
   return (
     <Stack height={"100%"} maxHeight={"100vh"} width={"auto"}>
-      <Header />
-      <Box
-        ref={boxRef}
-        className="scrollbar"
-        width={"100%"}
-        sx={{ flexGrow: 1, height: "100%", overflowY: "scroll", position: "relative" }}
-      >
-        {isFetching && (
-          <Box sx={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)" }}>
-            <ClipLoader color={theme.palette.primary.main} size={30} />
-          </Box>
-        )}
-        <Message menu={true} />
-      </Box>
-      {groupChat?.join_group ? (
-        <Footer />
-      ) : (
+      {!groupChat?.join_group && groupChat?.is_password ? (
         <div
           style={{
-            width: "100%",
-            height: "100%",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            width:"100%",
+            height:"100%",
+            flexDirection:"column"
           }}
-        ></div>
+        >
+          <Typography.Title level={2} type="danger" >This is secret group</Typography.Title>
+          <Typography.Title level={3} type="secondary" >Join group to see messages</Typography.Title>
+        </div>
+      ) : (
+        <>
+          <Header />
+          <Box
+            ref={boxRef}
+            className="scrollbar"
+            width={"100%"}
+            sx={{
+              flexGrow: 1,
+              height: "100%",
+              overflowY: "scroll",
+              position: "relative",
+            }}
+          >
+            {isFetching && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 10,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <ClipLoader color={theme.palette.primary.main} size={30} />
+              </Box>
+            )}
+            <Message menu={true} />
+          </Box>
+          {groupChat?.join_group ? (
+            <Footer />
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            ></div>
+          )}
+        </>
       )}
     </Stack>
   );
