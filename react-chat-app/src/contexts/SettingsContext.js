@@ -167,6 +167,7 @@ const SettingsProvider = ({ children }) => {
   };
 
   const [groupChat, setGroupChat] = useState(0);
+  const [uuidLogin, setUuidLogin] = useState(null);
   const [groupChatMap, setGroupChatMap] = useState({});
   const [chatHistory, setChatHistory] = useState([]);
   const [unreadMap, setUnreadMap] = useState({});
@@ -178,7 +179,7 @@ const SettingsProvider = ({ children }) => {
   // const [play, { sound }] = useSound(SoundRecieve, { volume: 1.0 });
 
   const connectSocket = () => {
-    const userId = localStorage.getItem("uuid");
+    const userId = localStorage.getItem("uuid") || uuidLogin;
     const socket = io(process.env.REACT_APP_SOCKET_URL);
 
     socket.on("connect", () => {
@@ -188,15 +189,16 @@ const SettingsProvider = ({ children }) => {
 
       socket.off("message");
 
+      console.log("zoooooooooooooooooooo")
       socket.on("message", (data) => {
         const { task_id, receiver_id, ...restData } = data;
-
+        console.log("socket chat : ", data)
         setGroupChatMap((prevGroupChatMap) => {
           if (prevGroupChatMap[receiver_id]) {
             const index = prevGroupChatMap[receiver_id].findIndex(
               (item) => item.id === data.task_id
             );
-
+            console.log("index: ",index)
             if (index > -1) {
               const updatedMessages = [...prevGroupChatMap[receiver_id]];
               updatedMessages[index] = restData;
@@ -286,7 +288,7 @@ const SettingsProvider = ({ children }) => {
 
   useEffect(() => {
     connectSocket();
-  }, []);
+  }, [uuidLogin]);
 
   const fetchMessages = async (groupId, limit, offset, startId = null) => {
     try {
@@ -371,7 +373,8 @@ const SettingsProvider = ({ children }) => {
         chatList,
         setChatListUnjoin,
         chatListUnjoin,
-        boxChatRef
+        boxChatRef,
+        setUuidLogin
       }}
     >
       {children}
