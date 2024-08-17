@@ -27,6 +27,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { Modal } from "@mui/material";
 import useSettings from "../../hooks/useSettings";
 import axios from "axios";
+import toast, { Toaster } from 'react-hot-toast';
 
 const StyledInput = styled(TextField)(({ theme }) => ({
   "& .MuiInputBase-input": {
@@ -42,15 +43,15 @@ const Actions = [
     y: 105,
     title: "Photo",
   },
-  // {
-  //   color: "#0159b2",
-  //   icon: <File size={24} />,
-  //   y: 180,
-  //   title: "Document",
-  // },
+  {
+    color: "#0159b2",
+    icon: <File size={24} />,
+    y: 180,
+    title: "Document",
+  },
 ];
 
-const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter }) => {
+const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter, setFileType,fileType,fileList }) => {
   const handleInputChange = (event) => {
     setMessage(event.target.value);
   };
@@ -67,17 +68,32 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter })
     const input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
-
+  
+    let newFileType;
     if (type === "Photo") {
+      newFileType = "image";
       input.accept = "image/*";
     } else if (type === "Document") {
+      newFileType = "doc";
       input.accept = ".doc,.docx,.pdf,.txt";
     } else {
       return;
     }
-
+  
     input.onchange = (e) => {
       const files = Array.from(e.target.files);
+      
+      // Kiểm tra nếu đã có files và loại file mới không khớp
+      if (fileList.length > 0 && newFileType !== fileType) {
+        toast.error(`You can only upload ${fileType} files in this batch.`)
+        return;
+      }
+  
+      // Nếu chưa có files, set fileType
+      if (fileList.length === 0) {
+        setFileType(newFileType);
+      }
+  
       const newFileList = files.map((file) => ({
         uid: `rc-upload-${Date.now()}-${file.name}`,
         name: file.name,
@@ -85,11 +101,11 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter })
         url: URL.createObjectURL(file),
         originFileObj: file,
       }));
-
+  
       setFileList((prevFileList) => [...prevFileList, ...newFileList]);
       setOpenAction(false);
     };
-
+  
     input.click();
   };
 
@@ -172,8 +188,28 @@ const Footer = ({scrollToBottom}) => {
     setPreviewImage(file.url || file.preview);
     setPreviewOpen(true);
   };
+
+  const [fileType, setFileType] = useState(null)
   const handleChange = ({ fileList: newFileList }) => {
-    console.log("newFileList: ", newFileList);
+    
+    if (newFileList.length > fileList.length) {
+      const newFile = newFileList[newFileList.length - 1];
+      
+      if (fileList.length === 0) {
+        const newFileType = newFile.type.startsWith('image/') ? 'image' : 'doc';
+        setFileType(newFileType);
+      } else {
+        const isImage = newFile.type.startsWith('image/');
+        const isCorrectType = (fileType === 'image' && isImage) || (fileType === 'doc' && !isImage);
+        
+        if (!isCorrectType) {
+          newFileList.pop();
+          toast.error(`You can only upload ${fileType} files in this batch.`)
+        }
+      }
+    }
+    
+    // Cập nhật fileList
     setFileList(newFileList);
   };
 
@@ -247,7 +283,7 @@ const Footer = ({scrollToBottom}) => {
         url: file.url,
         type: file.type,
         filename: file.filename,
-      }));
+      }));  
     }
 
     try {
@@ -312,6 +348,11 @@ const Footer = ({scrollToBottom}) => {
   );
 
   return (
+  <>
+  <Toaster
+  position="top-center"
+  reverseOrder={false}
+/>
     <Box
       p={2}
       sx={{
@@ -403,6 +444,9 @@ const Footer = ({scrollToBottom}) => {
             message={message}
             setFileList={setFileList}
             onEnter={handleSubmit}
+            setFileType={setFileType}
+            fileType={fileType}
+            fileList={fileList}
           />
         </Stack>
 
@@ -429,6 +473,8 @@ const Footer = ({scrollToBottom}) => {
         </Box>
       </Stack>
     </Box>
+</>
+
   );
 };
 

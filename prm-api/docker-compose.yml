@@ -38,7 +38,7 @@ services:
     restart: always
     environment:
       - TZ=Asia/Ho_Chi_Minh
-    command: celery -A src.worker worker -Q order_queue,message_queue -l INFO
+    command: celery -A src.worker worker -Q message_queue -l INFO
 
 # networks:
 #   base-network:
