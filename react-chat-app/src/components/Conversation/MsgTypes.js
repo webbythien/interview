@@ -13,13 +13,56 @@ import { useTheme } from "@mui/material/styles";
 import { DotsThreeVertical, DownloadSimple } from "phosphor-react";
 import React, { useEffect, useState } from "react";
 import { Message_options } from "../../data";
-import { deepOrange } from "@mui/material/colors";
 import { Image } from "antd";
+import { blue, green, purple, red, orange, pink, cyan, teal, indigo, deepPurple, lightBlue, lime, amber, deepOrange } from '@mui/material/colors';
+const colorOptions = [
+  blue, green, purple, red, orange, pink, cyan, teal, indigo, deepPurple, lightBlue, lime, amber, deepOrange
+];
+
+const shades = [300, 400, 500, 600, 700];
 
 const getIncomingStatus = (el) => {
   const localUuid = localStorage.getItem("uuid");
   const uuid = el.sender_uuid + "";
   return uuid !== localUuid + "";
+};
+function getColorFromUUID(uuid) {
+  if (!uuid) {
+    return { backgroundColor: blue[500], color: '#fff' };
+  }
+
+  const sum = uuid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  const colorIndex = sum % colorOptions.length;
+  
+  const shadeIndex = uuid.charCodeAt(0) % shades.length;
+  
+  const backgroundColor = colorOptions[colorIndex][shades[shadeIndex]];
+  
+  const color = calculateContrastColor(backgroundColor);
+  
+  return { backgroundColor, color };
+}
+
+function calculateContrastColor(hexColor) {
+  // Chuyển đổi hex sang RGB
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  
+  return brightness > 128 ? '#000000' : '#ffffff';
+}
+
+const AvatarCustom = ({ uuid, name }) => {
+  const { backgroundColor, color } = getColorFromUUID(uuid);
+  
+  return (
+    <Avatar sx={{ bgcolor: backgroundColor, color: color }}>
+      {name ? name[0].toUpperCase() : "O"}
+    </Avatar>
+  );
 };
 
 const DocMsg = ({ el, menu }) => {
@@ -30,9 +73,7 @@ const DocMsg = ({ el, menu }) => {
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
         {incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         <Box
           p={1.5}
@@ -77,9 +118,7 @@ const DocMsg = ({ el, menu }) => {
           </Stack>
         </Box>
         {!incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         {menu && <MessageOptions />}
       </Stack>
@@ -141,9 +180,7 @@ const LinkMsg = ({ el, menu }) => {
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
         {incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         <Box
           p={1.5}
@@ -201,9 +238,7 @@ const LinkMsg = ({ el, menu }) => {
           </Stack>
         </Box>
         {!incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         {menu && <MessageOptions />}
       </Stack>
@@ -236,9 +271,8 @@ const ReplyMsg = ({ el, menu }) => {
   return (
     <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
       {incoming && (
-        <Avatar sx={{ bgcolor: deepOrange[500] }}>
-          {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-        </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
+        
       )}
       <Box
         p={1.5}
@@ -274,9 +308,8 @@ const ReplyMsg = ({ el, menu }) => {
         </Stack>
       </Box>
       {!incoming && (
-        <Avatar sx={{ bgcolor: deepOrange[500] }}>
-          {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-        </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
+        
       )}
       {menu && <MessageOptions />}
     </Stack>
@@ -291,9 +324,7 @@ const MediaMsg = ({ el, menu }) => {
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
         {incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         <Box
           p={1.5}
@@ -334,9 +365,7 @@ const MediaMsg = ({ el, menu }) => {
           </Stack>
         </Box>
         {!incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         {menu && <MessageOptions />}
       </Stack>
@@ -372,9 +401,7 @@ const TextMsg = ({ el, menu }) => {
     <Stack direction="column" justifyContent={incoming ? "start" : "end"}>
       <Stack direction="row" justifyContent={incoming ? "start" : "end"}>
         {incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         <Box
           p={1.5}
@@ -394,9 +421,7 @@ const TextMsg = ({ el, menu }) => {
           </Typography>
         </Box>
         {!incoming && (
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>
-            {el?.sender_name ? el.sender_name[0].toUpperCase() : "O"}
-          </Avatar>
+          <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
         {menu && <MessageOptions />}
       </Stack>

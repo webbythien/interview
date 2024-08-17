@@ -47,7 +47,7 @@ const ChatElement = ({
     setUnreadMap,
     setChatList,
     setChatListUnjoin,
-    boxChatRef
+    boxChatRef,
   } = useSettings();
 
   const handleSetGroupChat = () => {
@@ -55,7 +55,7 @@ const ChatElement = ({
       // if (!join_group){
       //   return
       // }
-      
+
       if (groupChat.id !== id) {
         setLoadingHistory(true);
         setGroupChat({
@@ -86,7 +86,7 @@ const ChatElement = ({
 
   const handleJoinGroup = async (password = null) => {
     try {
-      setLoadingJoin(true)
+      setLoadingJoin(true);
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/v1/api/chat/join-group`,
         {
@@ -136,9 +136,8 @@ const ChatElement = ({
     } catch (error) {
       toast.error("Wrong password");
       console.error("Error joining group:", error);
-    }finally{
-      setLoadingJoin(false)
-
+    } finally {
+      setLoadingJoin(false);
     }
   };
 
@@ -165,7 +164,7 @@ const ChatElement = ({
 
   return (
     <>
-      <Toaster position="top-center"/>
+      <Toaster position="top-center" />
 
       <Modal
         title="Join group"
@@ -179,7 +178,7 @@ const ChatElement = ({
         }}
         footer={null}
       >
-      <Toaster position="top-center"/>
+        <Toaster position="top-center" />
 
         <Form
           name="basic"
@@ -218,10 +217,7 @@ const ChatElement = ({
               span: 16,
             }}
           >
-            <Button type="primary" htmlType="submit"
-            loading={loadingJoin}
-            
-            >
+            <Button type="primary" htmlType="submit" loading={loadingJoin}>
               Submit
             </Button>
           </Form.Item>
@@ -268,7 +264,10 @@ const ChatElement = ({
                   {truncateMessage(
                     groupChatMap[id]?.length > 0
                       ? groupChatMap[id][groupChatMap[id].length - 1]
-                          ?.message || msg
+                          ?.message === ""
+                        ? "attachment"
+                        : groupChatMap[id][groupChatMap[id].length - 1]
+                            ?.message || msg
                       : msg,
                     7
                   )}
