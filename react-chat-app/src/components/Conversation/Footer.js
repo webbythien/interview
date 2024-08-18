@@ -27,7 +27,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { Modal } from "@mui/material";
 import useSettings from "../../hooks/useSettings";
 import axios from "axios";
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
 
 const StyledInput = styled(TextField)(({ theme }) => ({
   "& .MuiInputBase-input": {
@@ -35,6 +35,8 @@ const StyledInput = styled(TextField)(({ theme }) => ({
     paddingBottom: "12px",
   },
 }));
+
+const MAX_TOTAL_SIZE = 1 * 1024 * 1024;
 
 const Actions = [
   {
@@ -51,13 +53,22 @@ const Actions = [
   },
 ];
 
-const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter, setFileType,fileType,fileList }) => {
+const ChatInput = ({
+  setOpenPicker,
+  setMessage,
+  message,
+  setFileList,
+  onEnter,
+  setFileType,
+  fileType,
+  fileList,
+}) => {
   const handleInputChange = (event) => {
     setMessage(event.target.value);
   };
 
   const handleKeyPress = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       onEnter();
     }
@@ -68,7 +79,7 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter, s
     const input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
-  
+
     let newFileType;
     if (type === "Photo") {
       newFileType = "image";
@@ -79,21 +90,33 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter, s
     } else {
       return;
     }
-  
+
     input.onchange = (e) => {
       const files = Array.from(e.target.files);
-      
-      // Kiểm tra nếu đã có files và loại file mới không khớp
-      if (fileList.length > 0 && newFileType !== fileType) {
-        toast.error(`You can only upload ${fileType} files in this batch.`)
+
+      let totalSize = 0;
+      fileList.forEach((file) => {
+        totalSize += file.size || 0;
+      });
+
+      files.forEach((file) => {
+        totalSize += file.size || 0;
+      });
+
+      if (totalSize > MAX_TOTAL_SIZE) {
+        toast.error("Total file size must be under 1MB");
         return;
       }
-  
-      // Nếu chưa có files, set fileType
+
+      if (fileList.length > 0 && newFileType !== fileType) {
+        toast.error(`You can only upload ${fileType} files in this batch.`);
+        return;
+      }
+
       if (fileList.length === 0) {
         setFileType(newFileType);
       }
-  
+
       const newFileList = files.map((file) => ({
         uid: `rc-upload-${Date.now()}-${file.name}`,
         name: file.name,
@@ -101,11 +124,11 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter, s
         url: URL.createObjectURL(file),
         originFileObj: file,
       }));
-  
+
       setFileList((prevFileList) => [...prevFileList, ...newFileList]);
       setOpenAction(false);
     };
-  
+
     input.click();
   };
 
@@ -169,7 +192,7 @@ const ChatInput = ({ setOpenPicker, setMessage, message, setFileList, onEnter, s
   );
 };
 
-const Footer = ({scrollToBottom}) => {
+const Footer = ({ scrollToBottom }) => {
   const theme = useTheme();
   const { groupChat, setChatHistory, setGroupChatMap } = useSettings();
   const [message, setMessage] = useState("");
@@ -189,27 +212,41 @@ const Footer = ({scrollToBottom}) => {
     setPreviewOpen(true);
   };
 
-  const [fileType, setFileType] = useState(null)
+  const [fileType, setFileType] = useState(null);
   const handleChange = ({ fileList: newFileList }) => {
-    
+    let totalSize = 0;
+
+    fileList.forEach((file) => {
+      totalSize += file.size || 0;
+    });
+
+    newFileList.slice(fileList.length).forEach((file) => {
+      totalSize += file.size || 0;
+    });
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      toast.error("Total file size must be under 1MB");
+      return;
+    }
+
     if (newFileList.length > fileList.length) {
       const newFile = newFileList[newFileList.length - 1];
-      
+
       if (fileList.length === 0) {
-        const newFileType = newFile.type.startsWith('image/') ? 'image' : 'doc';
+        const newFileType = newFile.type.startsWith("image/") ? "image" : "doc";
         setFileType(newFileType);
       } else {
-        const isImage = newFile.type.startsWith('image/');
-        const isCorrectType = (fileType === 'image' && isImage) || (fileType === 'doc' && !isImage);
-        
+        const isImage = newFile.type.startsWith("image/");
+        const isCorrectType =
+          (fileType === "image" && isImage) || (fileType === "doc" && !isImage);
+
         if (!isCorrectType) {
           newFileList.pop();
-          toast.error(`You can only upload ${fileType} files in this batch.`)
+          toast.error(`You can only upload ${fileType} files in this batch.`);
         }
       }
     }
-    
-    // Cập nhật fileList
+
     setFileList(newFileList);
   };
 
@@ -269,7 +306,7 @@ const Footer = ({scrollToBottom}) => {
     if (fileList.length <= 0 && (message === "" || message === null)) {
       return;
     }
-    const messageTemp = message
+    const messageTemp = message;
 
     setMessage("");
 
@@ -277,7 +314,7 @@ const Footer = ({scrollToBottom}) => {
     const data = {
       sender_uuid: localStorage.getItem("uuid"),
       receiver_id: groupChat.id,
-      sender_name :localStorage.getItem("username"),
+      sender_name: localStorage.getItem("username"),
       message: messageTemp,
       files: [],
     };
@@ -288,7 +325,7 @@ const Footer = ({scrollToBottom}) => {
         url: file.url,
         type: file.type,
         filename: file.filename,
-      }));  
+      }));
     }
 
     try {
@@ -326,7 +363,7 @@ const Footer = ({scrollToBottom}) => {
     } catch (error) {
       console.error("Error sending message", error);
     }
-   
+
     setFileList([]);
   };
 
@@ -350,133 +387,131 @@ const Footer = ({scrollToBottom}) => {
   );
 
   return (
-  <>
-  <Toaster
-  position="top-center"
-  reverseOrder={false}
-/>
-    <Box
-      p={2}
-      sx={{
-        width: "100%",
-        backgroundColor:
-          theme.palette.mode === "light"
-            ? "#F8FAFF"
-            : theme.palette.background.paper,
-        boxShadow: "0px 0px 2px rgba(0,0,0,0.25)",
-      }}
-    >
-      <Stack direction="row" alignItems={"center"} spacing={3}>
-        {fileList.length > 0 && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "90px",
-              width: "75%",
-              background: "white",
-              padding: "16px",
-              borderRadius: "16px",
-            }}
-          >
-            <Upload
-              onPreview={handlePreview}
-              onChange={handleChange}
-              listType="picture-card"
-              fileList={fileList}
-              beforeUpload={() => false}
+    <>
+      <Toaster position="top-center" reverseOrder={false} />
+      <Box
+        p={2}
+        sx={{
+          width: "100%",
+          backgroundColor:
+            theme.palette.mode === "light"
+              ? "#F8FAFF"
+              : theme.palette.background.paper,
+          boxShadow: "0px 0px 2px rgba(0,0,0,0.25)",
+        }}
+      >
+        <Stack direction="row" alignItems={"center"} spacing={3}>
+          {fileList.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "90px",
+                width: "75%",
+                background: "white",
+                padding: "16px",
+                borderRadius: "16px",
+              }}
             >
-              {fileList.length >= 4 ? null : uploadButton}
-            </Upload>
-            {uploading && (
-              <LinearProgress
-                variant="determinate"
-                value={uploadProgress}
-                sx={{ mt: 2 }}
-              />
-            )}
-            {previewOpen && (
-              <Modal
-                open={previewOpen}
-                onClose={() => setPreviewOpen(false)}
-                aria-labelledby="preview-modal"
-                aria-describedby="preview-modal-description"
+              <Upload
+                onPreview={handlePreview}
+                onChange={handleChange}
+                listType="picture-card"
+                fileList={fileList}
+                beforeUpload={() => false}
               >
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: "auto",
-                    bgcolor: "background.paper",
-                    boxShadow: 24,
-                    p: 4,
-                  }}
+                {fileList.length >= 4 ? null : uploadButton}
+              </Upload>
+              {uploading && (
+                <LinearProgress
+                  variant="determinate"
+                  value={uploadProgress}
+                  sx={{ mt: 2 }}
+                />
+              )}
+              {previewOpen && (
+                <Modal
+                  open={previewOpen}
+                  onClose={() => setPreviewOpen(false)}
+                  aria-labelledby="preview-modal"
+                  aria-describedby="preview-modal-description"
                 >
-                  <img
-                    src={previewImage}
-                    alt="Preview"
-                    style={{ maxWidth: "100%", maxHeight: "80vh" }}
-                  />
-                </Box>
-              </Modal>
-            )}
-          </div>
-        )}
-        <Stack sx={{ width: "100%" }}>
-          {/* Chat Input */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      width: "auto",
+                      bgcolor: "background.paper",
+                      boxShadow: 24,
+                      p: 4,
+                    }}
+                  >
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      style={{ maxWidth: "100%", maxHeight: "80vh" }}
+                    />
+                  </Box>
+                </Modal>
+              )}
+            </div>
+          )}
+          <Stack sx={{ width: "100%" }}>
+            {/* Chat Input */}
+            <Box
+              sx={{
+                display: openPicker ? "inline" : "none",
+                zIndex: 10,
+                position: "fixed",
+                bottom: 81,
+                right: 100,
+              }}
+            >
+              <Picker
+                theme={theme.palette.mode}
+                data={data}
+                onEmojiSelect={(e) =>
+                  setMessage((prev) => `${prev} ${e.native}`)
+                }
+              />
+            </Box>
+            <ChatInput
+              setOpenPicker={setOpenPicker}
+              setMessage={setMessage}
+              message={message}
+              setFileList={setFileList}
+              onEnter={handleSubmit}
+              setFileType={setFileType}
+              fileType={fileType}
+              fileList={fileList}
+            />
+          </Stack>
+
           <Box
             sx={{
-              display: openPicker ? "inline" : "none",
-              zIndex: 10,
-              position: "fixed",
-              bottom: 81,
-              right: 100,
+              height: 48,
+              width: 48,
+              backgroundColor: theme.palette.primary.main,
+              borderRadius: 1.5,
             }}
           >
-            <Picker
-              theme={theme.palette.mode}
-              data={data}
-              onEmojiSelect={(e)=>setMessage(prev => `${prev} ${e.native}`)}
-            />
+            <Stack
+              sx={{
+                height: "100%",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconButton onClick={handleSubmit} disabled={uploading}>
+                <PaperPlaneTilt color="#fff" />
+              </IconButton>
+            </Stack>
           </Box>
-          <ChatInput
-            setOpenPicker={setOpenPicker}
-            setMessage={setMessage}
-            message={message}
-            setFileList={setFileList}
-            onEnter={handleSubmit}
-            setFileType={setFileType}
-            fileType={fileType}
-            fileList={fileList}
-          />
         </Stack>
-
-        <Box
-          sx={{
-            height: 48,
-            width: 48,
-            backgroundColor: theme.palette.primary.main,
-            borderRadius: 1.5,
-          }}
-        >
-          <Stack
-            sx={{
-              height: "100%",
-              width: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <IconButton onClick={handleSubmit} disabled={uploading}>
-              <PaperPlaneTilt color="#fff" />
-            </IconButton>
-          </Stack>
-        </Box>
-      </Stack>
-    </Box>
-</>
-
+      </Box>
+    </>
   );
 };
 
