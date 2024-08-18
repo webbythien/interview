@@ -38,6 +38,20 @@ const StyledInput = styled(TextField)(({ theme }) => ({
 
 const MAX_TOTAL_SIZE = 1 * 1024 * 1024;
 
+const isDocumentFile = (file) => {
+  const documentTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+  ];
+  return documentTypes.includes(file.type);
+};
+
 const Actions = [
   {
     color: "#4da5fe",
@@ -86,7 +100,7 @@ const ChatInput = ({
       input.accept = "image/*";
     } else if (type === "Document") {
       newFileType = "doc";
-      input.accept = ".doc,.docx,.pdf,.txt";
+      input.accept = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt";
     } else {
       return;
     }
@@ -237,8 +251,9 @@ const Footer = ({ scrollToBottom }) => {
         setFileType(newFileType);
       } else {
         const isImage = newFile.type.startsWith("image/");
+        const isDoc = isDocumentFile(newFile);
         const isCorrectType =
-          (fileType === "image" && isImage) || (fileType === "doc" && !isImage);
+          (fileType === "image" && isImage) || (fileType === "doc" && isDoc);
 
         if (!isCorrectType) {
           newFileList.pop();
@@ -299,6 +314,7 @@ const Footer = ({ scrollToBottom }) => {
       return result;
     } catch (error) {
       console.error("Upload failed:", error);
+      toast.error("Unsupported file type");
       setUploading(false);
     }
   };

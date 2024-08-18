@@ -25,9 +25,9 @@ export default function Router() {
       element: <MainLayout/>,
       children:[
         {element: <LoginPage/>, path:'login'},
-        {element: <RegisterPage/>, path:'register'},
-        {element: <ResetPasswordPage/>, path:'reset-password'},
-        {element: <NewPasswordPage/>, path:'new-password'},
+        // {element: <RegisterPage/>, path:'register'},
+        // {element: <ResetPasswordPage/>, path:'reset-password'},
+        // {element: <NewPasswordPage/>, path:'new-password'},
       ]
     },
     {
@@ -36,10 +36,10 @@ export default function Router() {
       children: [
         { element: <Navigate to={DEFAULT_PATH} replace />, index: true },
         { path: "app", element: <GeneralApp /> },
-        { path: "settings", element: <Settings /> },
-        { path: "group", element: <GroupPage /> },
-        { path: "call", element: <CallPage /> },
-        { path: "profile", element: <ProfilePage /> },
+        // { path: "settings", element: <Settings /> },
+        // { path: "group", element: <GroupPage /> },
+        // { path: "call", element: <CallPage /> },
+        // { path: "profile", element: <ProfilePage /> },
         { path: "404", element: <Page404 /> },
         { path: "*", element: <Navigate to="/404" replace /> },
       ],
