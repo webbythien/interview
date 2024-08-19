@@ -87,7 +87,7 @@ const AvatarCustom = ({ uuid, name }) => {
   const { backgroundColor, color } = getColorFromUUID(uuid);
 
   return (
-    <Tooltip placement="top" title={name||"User not found"}>
+    <Tooltip placement="top" title={name || "User not found"}>
       <Avatar sx={{ bgcolor: backgroundColor, color: color }}>
         {name ? name[0].toUpperCase() : "O"}
       </Avatar>
@@ -105,48 +105,51 @@ const DocMsg = ({ el, menu }) => {
         {incoming && (
           <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
-        <Box
-          p={1.5}
-          sx={{
-            backgroundColor: incoming
-              ? theme.palette.background.default
-              : theme.palette.primary.main,
-            borderRadius: 1.5,
-            width: "max-content",
-          }}
-        >
-          <Stack spacing={2}>
-            <Stack
-              p={2}
-              spacing={3}
-              direction="row"
-              alignItems="center"
-              sx={{
-                backgroundColor: theme.palette.background.paper,
-                borderRadius: 1,
-              }}
-            >
-              <Image size={48} />
-              <Typography variant="caption">{el.doc.name}</Typography>
-              <IconButton>
-                <a
-                  href={el.doc.link}
-                  download={el.doc.name}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <DownloadSimple />
-                </a>
-              </IconButton>
+        <Tooltip placement="top" title={el.created_at}>
+          <Box
+            p={1.5}
+            sx={{
+              backgroundColor: incoming
+                ? theme.palette.background.default
+                : theme.palette.primary.main,
+              borderRadius: 1.5,
+              width: "max-content",
+            }}
+          >
+            <Stack spacing={2}>
+              <Stack
+                p={2}
+                spacing={3}
+                direction="row"
+                alignItems="center"
+                sx={{
+                  backgroundColor: theme.palette.background.paper,
+                  borderRadius: 1,
+                }}
+              >
+                <Image size={48} />
+                <Typography variant="caption">{el.doc.name}</Typography>
+                <IconButton>
+                  <a
+                    href={el.doc.link}
+                    download={el.doc.name}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <DownloadSimple />
+                  </a>
+                </IconButton>
+              </Stack>
+              <Typography
+                variant="body2"
+                sx={{ color: incoming ? theme.palette.text : "#fff" }}
+              >
+                {el.message}
+              </Typography>
             </Stack>
-            <Typography
-              variant="body2"
-              sx={{ color: incoming ? theme.palette.text : "#fff" }}
-            >
-              {el.message}
-            </Typography>
-          </Stack>
-        </Box>
+          </Box>
+        </Tooltip>
+
         {!incoming && (
           <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
@@ -352,44 +355,48 @@ const MediaMsg = ({ el, menu }) => {
         {incoming && (
           <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
-        <Box
-          p={1.5}
-          sx={{
-            backgroundColor: incoming
-              ? theme.palette.background.default
-              : theme.palette.primary.main,
-            borderRadius: 1.5,
-            width: "max-content",
-          }}
-        >
-          <Stack spacing={1}>
-            <Image.PreviewGroup
-              preview={{
-                onChange: (current, prev) =>
-                  console.log(`current index: ${current}, prev index: ${prev}`),
-              }}
-            >
-              {el.img.map((image, index) => (
-                <Image
-                  key={index}
-                  src={image}
-                  alt={el.message}
-                  style={{
-                    maxHeight: 120,
-                    borderRadius: "10px",
-                    objectFit: "cover",
-                  }}
-                />
-              ))}
-            </Image.PreviewGroup>
-            <Typography
-              variant="body2"
-              color={incoming ? theme.palette.text : "#fff"}
-            >
-              {el.message}
-            </Typography>
-          </Stack>
-        </Box>
+        <Tooltip placement="top" title={el.created_at}>
+          <Box
+            p={1.5}
+            sx={{
+              backgroundColor: incoming
+                ? theme.palette.background.default
+                : theme.palette.primary.main,
+              borderRadius: 1.5,
+              width: "max-content",
+            }}
+          >
+            <Stack spacing={1}>
+              <Image.PreviewGroup
+                preview={{
+                  onChange: (current, prev) =>
+                    console.log(
+                      `current index: ${current}, prev index: ${prev}`
+                    ),
+                }}
+              >
+                {el.img.map((image, index) => (
+                  <Image
+                    key={index}
+                    src={image}
+                    alt={el.message}
+                    style={{
+                      maxHeight: 120,
+                      borderRadius: "10px",
+                      objectFit: "cover",
+                    }}
+                  />
+                ))}
+              </Image.PreviewGroup>
+              <Typography
+                variant="body2"
+                color={incoming ? theme.palette.text : "#fff"}
+              >
+                {el.message}
+              </Typography>
+            </Stack>
+          </Box>
+        </Tooltip>
         {!incoming && (
           <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
@@ -429,23 +436,25 @@ const TextMsg = ({ el, menu }) => {
         {incoming && (
           <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
-        <Box
-          p={1.5}
-          sx={{
-            backgroundColor: incoming
-              ? theme.palette.background.default
-              : theme.palette.primary.main,
-            borderRadius: 1.5,
-            width: "max-content",
-          }}
-        >
-          <Typography
-            variant="body2"
-            color={incoming ? theme.palette.text : "#fff"}
+        <Tooltip placement="top" title={el.created_at}>
+          <Box
+            p={1.5}
+            sx={{
+              backgroundColor: incoming
+                ? theme.palette.background.default
+                : theme.palette.primary.main,
+              borderRadius: 1.5,
+              width: "max-content",
+            }}
           >
-            {el.message}
-          </Typography>
-        </Box>
+            <Typography
+              variant="body2"
+              color={incoming ? theme.palette.text : "#fff"}
+            >
+              {el.message}
+            </Typography>
+          </Box>
+        </Tooltip>
         {!incoming && (
           <AvatarCustom uuid={el.sender_uuid} name={el.sender_name} />
         )}
