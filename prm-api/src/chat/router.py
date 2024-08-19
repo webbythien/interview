@@ -489,6 +489,7 @@ async def create_conversation(request: SendMessageRequest):
                 "task_id": task_id,
                 "sender_name": request.sender_name,
             },
+            countdown=0.5
         )
 
         return {"msg": "Send message task initiated successfully", "task_id": task_id}
