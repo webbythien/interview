@@ -31,7 +31,8 @@ import traceback
 from src.s3 import S3AWSHelpers
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.exc import SQLAlchemyError
-
+from src.emitter import socket_io
+import json
 logging.getLogger().setLevel(logging.INFO)
 from math import ceil
 from datetime import datetime, timedelta
@@ -46,7 +47,7 @@ router = APIRouter()
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from src.database import get_db
-from .schemas import CreateGroupRequest,JoinGroupRequest, UploadedFileInfo
+from .schemas import CreateGroupRequest,JoinGroupRequest, UploadedFileInfo, JoinRoomCallRequest, SignalRequest
 from .models import Group, GroupConversation, Conversation,ConversationImage,Docs
 from sqlalchemy import func, desc, and_
 from uuid import uuid4
@@ -126,6 +127,7 @@ async def send_mail():
     return {
         "msg": "Send message successfully"
     }
+
 @router.post("/groups", status_code=status.HTTP_201_CREATED)
 async def create_group(group_data: CreateGroupRequest, db: Session = Depends(get_db)):
     try:
@@ -444,7 +446,7 @@ async def check_user_in_group(
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Failed to check user membership")
-    
+
 @router.get("/groups/{group_id}/messages")
 async def get_group_messages(
     group_id: int,
@@ -521,6 +523,52 @@ def format_message(message, db):
 
     return message_data
 
+@router.post("/join-call")
+async def join_call(request: JoinRoomCallRequest, db: Session = Depends(get_db)):
+    try:
+        # Lấy danh sách user_id từ group_id
+        users_in_group = db.query(GroupConversation.user_uuid).filter(
+            GroupConversation.group_id == request.room_id,
+            GroupConversation.status == 1
+        ).all()
+
+        # Gửi sự kiện "user-connected" đến tất cả các user trong group
+        for user in users_in_group:
+            socket_io.To(user.user_uuid).Emit("user-connected", {
+                "room_id": request.room_id,
+                "user_uuid": request.user_uuid
+            })
+
+        return {"msg": "Joined audio call successfully"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Failed to join call")
+
+@router.post("/signal")
+async def signal(request: SignalRequest, db: Session = Depends(get_db)):
+    try:
+        # Giải mã chuỗi JSON thành đối tượng
+        signal_data = json.loads(request.signal)
+
+        # Lấy danh sách user_id từ group_id
+        users_in_group = db.query(GroupConversation.user_uuid).filter(
+            GroupConversation.group_id == request.room_id,
+            GroupConversation.status == 1,
+            GroupConversation.user_uuid != request.user_uuid  # Không gửi cho chính người phát tín hiệu
+        ).all()
+
+        # Gửi tín hiệu đến tất cả các user trong group ngoại trừ người gửi tín hiệu
+        for user in users_in_group:
+            socket_io.To(user.user_uuid).Emit("signal", {
+                "room_id": request.room_id,
+                "user_uuid": request.user_uuid,
+                "signal": signal_data,
+            })
+
+        return {"msg": "Signal sent successfully"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Failed to send signal")
 # @router.post("")
 # async def send_message(
 #     send_msg_data: SendMessageRequest, db: Session = Depends(get_db)

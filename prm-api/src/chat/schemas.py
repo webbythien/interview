@@ -6,6 +6,7 @@ from typing import Optional
 from src.models import ORJSONModel
 from fastapi import HTTPException
 import datetime
+from typing import Union
 
 from typing import List, Optional
 
@@ -81,3 +82,13 @@ class SendMessageRequest(ORJSONModel):
     sender_name: str
     message: Optional[str] = None
     files: Optional[List[FileInfo]] = None
+
+class JoinRoomCallRequest(ORJSONModel):
+    room_id: int
+    user_uuid: str
+
+
+class SignalRequest(ORJSONModel):
+    room_id: int
+    user_uuid: str
+    signal: Union[str, dict]
