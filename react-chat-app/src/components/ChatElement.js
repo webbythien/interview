@@ -22,6 +22,7 @@ const ChatElement = ({
   join_group,
   is_password,
   setValue,
+  setHasMore,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingJoin, setLoadingJoin] = useState(false);
@@ -81,6 +82,8 @@ const ChatElement = ({
       });
     } catch (error) {
       setLoadingHistory(false);
+    }finally{
+      setHasMore(true)
     }
   };
 
@@ -240,60 +243,61 @@ const ChatElement = ({
         p={2}
       >
         <Tooltip placement="top" title={`Group ID: ${id}`}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Stack direction="row" spacing={2}>
-            {online ? (
-              <StyledBadge
-                overlap="circular"
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                variant="dot"
-              >
-                <Avatar src={img} />
-              </StyledBadge>
-            ) : (
-              <Avatar src={img} />
-            )}
-
-            <Stack spacing={0.3}>
-              <Typography variant="subtitle2">{truncateMessage(name,16)}</Typography>
-              {join_group ? (
-                <Typography variant="caption">
-                  {truncateMessage(
-                    groupChatMap[id]?.length > 0
-                      ? groupChatMap[id][groupChatMap[id].length - 1]
-                          ?.message === ""
-                        ? "attachment"
-                        : groupChatMap[id][groupChatMap[id].length - 1]
-                            ?.message || msg
-                      : msg,
-                    7
-                  )}
-                </Typography>
-              ) : (
-                <Button
-                  onClick={() => {
-                    is_password ? showModal() : handleJoinGroup();
-                  }}
-                  loading={true}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Stack direction="row" spacing={2}>
+              {online ? (
+                <StyledBadge
+                  overlap="circular"
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  variant="dot"
                 >
-                  Join Group
-                </Button>
+                  <Avatar src={img} />
+                </StyledBadge>
+              ) : (
+                <Avatar src={img} />
               )}
+
+              <Stack spacing={0.3}>
+                <Typography variant="subtitle2">
+                  {truncateMessage(name, 16)}
+                </Typography>
+                {join_group ? (
+                  <Typography variant="caption">
+                    {truncateMessage(
+                      groupChatMap[id]?.length > 0
+                        ? groupChatMap[id][groupChatMap[id].length - 1]
+                            ?.message === ""
+                          ? "attachment"
+                          : groupChatMap[id][groupChatMap[id].length - 1]
+                              ?.message || msg
+                        : msg,
+                      7
+                    )}
+                  </Typography>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      is_password ? showModal() : handleJoinGroup();
+                    }}
+                    loading={true}
+                  >
+                    Join Group
+                  </Button>
+                )}
+              </Stack>
             </Stack>
-          </Stack>
-          <Stack spacing={2} alignItems="center">
-            {/* <Typography sx={{fontWeight:600}} variant='caption'>
+            <Stack spacing={2} alignItems="center">
+              {/* <Typography sx={{fontWeight:600}} variant='caption'>
                 {time}
               </Typography> */}
-            <Badge color="primary" badgeContent={unreadMap[id] || 0}></Badge>
+              <Badge color="primary" badgeContent={unreadMap[id] || 0}></Badge>
+            </Stack>
           </Stack>
-        </Stack>
         </Tooltip>
-
       </Box>
     </>
   );

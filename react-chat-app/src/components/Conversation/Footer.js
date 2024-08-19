@@ -76,6 +76,8 @@ const ChatInput = ({
   setFileType,
   fileType,
   fileList,
+  setUnreadMap,
+  groupChat
 }) => {
   const handleInputChange = (event) => {
     setMessage(event.target.value);
@@ -154,7 +156,11 @@ const ChatInput = ({
       value={message}
       onChange={handleInputChange}
       onKeyPress={handleKeyPress}
-      InputProps={{
+      onFocus={()=>setUnreadMap(prev => ({
+        ...prev,
+        [groupChat.id]:0
+      }))}
+      InputProps={{ 
         disableUnderline: true,
         startAdornment: (
           <Stack sx={{ width: "max-content" }}>
@@ -208,7 +214,7 @@ const ChatInput = ({
 
 const Footer = ({ scrollToBottom }) => {
   const theme = useTheme();
-  const { groupChat, setChatHistory, setGroupChatMap } = useSettings();
+  const { groupChat, setChatHistory, setGroupChatMap,setUnreadMap } = useSettings();
   const [message, setMessage] = useState("");
 
   const [openPicker, setOpenPicker] = useState(false);
@@ -501,6 +507,8 @@ const Footer = ({ scrollToBottom }) => {
               setFileType={setFileType}
               fileType={fileType}
               fileList={fileList}
+              setUnreadMap={setUnreadMap}
+              groupChat={groupChat}
             />
           </Stack>
 

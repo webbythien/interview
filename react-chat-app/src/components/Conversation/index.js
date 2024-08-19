@@ -20,6 +20,8 @@ const Conversation = () => {
     groupChatMap,
     setGroupChatMap,
     boxChatRef,
+    hasMore,
+    setHasMore
   } = useSettings();
 
   const setRefs = (element) => {
@@ -28,7 +30,6 @@ const Conversation = () => {
   };
 
   const [isFetching, setIsFetching] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
   const scrollToBottom = () => {
@@ -38,7 +39,7 @@ const Conversation = () => {
   };
 
   const fetchMoreMessages = useCallback(async () => {
-    if (isFetching || !hasMore) return;
+    if (isFetching) return;
 
     setIsFetching(true);
     const oldScrollHeight = boxRef.current.scrollHeight;
@@ -72,13 +73,13 @@ const Conversation = () => {
         }, 0);
       }
 
-      setHasMore(response.data.has_more);
+      // setHasMore(response.data.has_more);
     } catch (error) {
       console.error("Error fetching more messages:", error);
     } finally {
       setIsFetching(false);
     }
-  }, [isFetching, hasMore, groupChatMap, groupChat.id, setGroupChatMap]);
+  }, [isFetching, groupChatMap, groupChat.id, setGroupChatMap]);
 
   useEffect(() => {
     const handleScroll = () => {

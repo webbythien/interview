@@ -173,6 +173,7 @@ const SettingsProvider = ({ children }) => {
   const [unreadMap, setUnreadMap] = useState({});
   const [chatList, setChatList] = useState([])
   const [chatListUnjoin, setChatListUnjoin] = useState([])
+  const [hasMore, setHasMore] = useState(true);
 
   const [loadingHistory, setLoadingHistory] = useState(true);
 
@@ -374,7 +375,9 @@ const SettingsProvider = ({ children }) => {
         setChatListUnjoin,
         chatListUnjoin,
         boxChatRef,
-        setUuidLogin
+        setUuidLogin,
+        hasMore,
+        setHasMore
       }}
     >
       {children}
