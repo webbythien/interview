@@ -53,7 +53,7 @@ const Header = () => {
                     </Typography>
                 </Stack>
         </Stack>
-        <Stack direction='row' alignItems='center' spacing={3}>
+        {/* <Stack direction='row' alignItems='center' spacing={3}>
             <IconButton>
                 <VideoCamera/>
             </IconButton>
@@ -67,7 +67,7 @@ const Header = () => {
             <IconButton>
                 <CaretDown/>
             </IconButton>
-        </Stack>
+        </Stack> */}
     </Stack>
 </Box>
   )

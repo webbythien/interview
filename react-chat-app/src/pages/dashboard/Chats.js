@@ -45,7 +45,7 @@ function TabPanel(props) {
       id={`full-width-tabpanel-${index}`}
       aria-labelledby={`full-width-tab-${index}`}
       {...other}
-      style={{ maxHeight: "64vh" }}
+      style={{ maxHeight: "72vh" }}
       className="scrollbar"
     >
       {value === index && (
@@ -314,7 +314,7 @@ const Chats = () => {
             </IconButton>
           </Stack>
 
-          <Stack sx={{ width: "100%" }}>
+          {/* <Stack sx={{ width: "100%" }}>
             <Search>
               <SearchIconWrapper>
                 <MagnifyingGlass color="#709CE6" />
@@ -324,7 +324,7 @@ const Chats = () => {
                 inputProps={{ "aria-label": "search" }}
               />
             </Search>
-          </Stack>
+          </Stack> */}
 
           <Stack spacing={1}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
